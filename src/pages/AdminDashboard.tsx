@@ -184,96 +184,250 @@ const AdminDashboard = () => {
 
         {/* Students Management Tab */}
         <TabsContent value="students" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                إدارة الطلاب
-              </CardTitle>
-              <CardDescription>
-                عرض وإدارة جميع الطلاب المسجلين
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center mb-6">
-                <Input 
-                  placeholder="البحث عن طالب..." 
-                  className="max-w-sm"
-                />
-                <Button>إضافة طالب جديد</Button>
-              </div>
-              
-              <div className="space-y-4">
-                {recentStudents.map((student, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                        <span className="font-semibold text-primary">
-                          {student.name.charAt(0)}
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="font-medium">{student.name}</h4>
-                        <p className="text-sm text-muted-foreground">{student.course}</p>
-                        <p className="text-xs text-muted-foreground">تاريخ التسجيل: {student.joinDate}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant={student.status === 'نشط' ? 'default' : 'secondary'}>
-                        {student.status}
-                      </Badge>
-                      <Button size="sm" variant="outline">تعديل</Button>
-                      <Button size="sm" variant="outline">عرض التفاصيل</Button>
-                    </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Student List */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    قائمة الطلاب
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-between items-center mb-6">
+                    <Input 
+                      placeholder="البحث عن طالب..." 
+                      className="max-w-sm"
+                    />
+                    <Button>إضافة طالب جديد</Button>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  
+                  <div className="space-y-4">
+                    {recentStudents.map((student, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                            <span className="font-semibold text-primary">
+                              {student.name.charAt(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <h4 className="font-medium">{student.name}</h4>
+                            <p className="text-sm text-muted-foreground">{student.course}</p>
+                            <p className="text-xs text-muted-foreground">تاريخ التسجيل: {student.joinDate}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge variant={student.status === 'نشط' ? 'default' : 'secondary'}>
+                            {student.status}
+                          </Badge>
+                          <Button size="sm" variant="outline">تعديل</Button>
+                          <Button size="sm" variant="outline">عرض التفاصيل</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Assign Students to Teachers */}
+            <div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>تخصيص الطلاب للمعلمين</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">اختر الطالب</label>
+                    <select className="w-full p-2 border rounded-md">
+                      <option>أحمد محمد</option>
+                      <option>فاطمة علي</option>
+                      <option>محمد الأحمد</option>
+                      <option>عائشة سالم</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">اختر المعلم</label>
+                    <select className="w-full p-2 border rounded-md">
+                      <option>الأستاذ محمد الأحمد</option>
+                      <option>الأستاذة فاطمة سالم</option>
+                      <option>الأستاذ علي محمد</option>
+                      <option>الأستاذة عائشة علي</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">الدورة</label>
+                    <select className="w-full p-2 border rounded-md">
+                      <option>القاعدة النورانية</option>
+                      <option>جزء عم</option>
+                      <option>تجويد متقدم</option>
+                      <option>حفظ متقدم</option>
+                    </select>
+                  </div>
+                  
+                  <Button className="w-full">تخصيص الطالب</Button>
+                </CardContent>
+              </Card>
+
+              {/* Pending Requests */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="w-4 h-4" />
+                    طلبات الانضمام
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {[
+                      { name: 'سعد الأحمد', course: 'القاعدة النورانية', date: '2024-01-20' },
+                      { name: 'مريم سالم', course: 'جزء عم', date: '2024-01-19' },
+                      { name: 'عبدالله محمد', course: 'تجويد متقدم', date: '2024-01-18' }
+                    ].map((request, index) => (
+                      <div key={index} className="p-3 border rounded-lg">
+                        <div className="flex justify-between items-start mb-2">
+                          <h5 className="font-medium text-sm">{request.name}</h5>
+                          <span className="text-xs text-muted-foreground">{request.date}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-3">{request.course}</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" className="flex-1">قبول</Button>
+                          <Button size="sm" variant="outline" className="flex-1">رفض</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Courses Management Tab */}
         <TabsContent value="courses" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                إدارة الدورات
-              </CardTitle>
-              <CardDescription>
-                إنشاء وتعديل الدورات التعليمية
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold">الدورات الحالية</h3>
-                <Button>إضافة دورة جديدة</Button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {courses.map((course, index) => (
-                  <Card key={index}>
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <h4 className="font-semibold text-lg">{course.name}</h4>
-                        <Badge variant={course.status === 'مجاني' ? 'secondary' : 'default'}>
-                          {course.status}
-                        </Badge>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Existing Courses */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" />
+                    الدورات الحالية
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {courses.map((course, index) => (
+                      <Card key={index}>
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <h4 className="font-semibold">{course.name}</h4>
+                            <Badge variant={course.status === 'مجاني' ? 'secondary' : 'default'}>
+                              {course.status}
+                            </Badge>
+                          </div>
+                          <div className="space-y-1 text-sm text-muted-foreground mb-3">
+                            <p>عدد الطلاب: {course.students}</p>
+                            <p>الإيرادات: ${course.revenue.toLocaleString()}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline">تعديل</Button>
+                            <Button size="sm" variant="outline">عرض</Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Add New Course */}
+            <div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>إضافة دورة جديدة</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">اسم الدورة</label>
+                    <Input placeholder="مثال: أحكام التلاوة" />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">الوصف</label>
+                    <textarea 
+                      className="w-full p-2 border rounded-md text-sm min-h-[80px]" 
+                      placeholder="وصف مختصر عن الدورة..."
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">المدة (بالأسابيع)</label>
+                    <Input type="number" placeholder="8" />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">السعر ($)</label>
+                    <Input type="number" placeholder="50" />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">المستوى</label>
+                    <select className="w-full p-2 border rounded-md">
+                      <option>مبتدئ</option>
+                      <option>متوسط</option>
+                      <option>متقدم</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-2">المعلم المسؤول</label>
+                    <select className="w-full p-2 border rounded-md">
+                      <option>الأستاذ محمد الأحمد</option>
+                      <option>الأستاذة فاطمة سالم</option>
+                      <option>الأستاذ علي محمد</option>
+                    </select>
+                  </div>
+                  
+                  <Button className="w-full">إنشاء الدورة</Button>
+                </CardContent>
+              </Card>
+
+              {/* Course Categories */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>تصنيفات الدورات</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {[
+                      { name: 'التجويد', courses: 3, color: 'bg-blue-100 text-blue-800' },
+                      { name: 'الحفظ', courses: 2, color: 'bg-green-100 text-green-800' },
+                      { name: 'القراءات', courses: 1, color: 'bg-purple-100 text-purple-800' }
+                    ].map((category, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 rounded-lg border">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-1 rounded text-xs ${category.color}`}>
+                            {category.name}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {category.courses} دورات
+                          </span>
+                        </div>
+                        <Button size="sm" variant="ghost">تعديل</Button>
                       </div>
-                      <div className="space-y-2 text-sm text-muted-foreground mb-4">
-                        <p>عدد الطلاب: {course.students}</p>
-                        <p>الإيرادات: ${course.revenue.toLocaleString()}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">تعديل</Button>
-                        <Button size="sm" variant="outline">عرض التفاصيل</Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                    ))}
+                  </div>
+                  <Button variant="outline" className="w-full mt-3">إضافة تصنيف</Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Content Management Tab */}
