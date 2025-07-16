@@ -3,10 +3,17 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
+import WhatsAppFloat from './WhatsAppFloat';
 import { User, BookOpen, Home, UserPlus } from 'lucide-react';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
+  
+  // Default WhatsApp number - in real app this would come from admin settings
+  const whatsappNumber = '+966501234567';
+  
+  // Don't show WhatsApp button on admin pages
+  const isAdminPage = location.pathname.includes('/admin');
 
   const navItems = [
     { name: 'الرئيسية', path: '/', icon: Home },
@@ -91,6 +98,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
       </footer>
+      
+      {/* WhatsApp Float Button - Only show on non-admin pages */}
+      {!isAdminPage && <WhatsAppFloat phoneNumber={whatsappNumber} />}
     </div>
   );
 };

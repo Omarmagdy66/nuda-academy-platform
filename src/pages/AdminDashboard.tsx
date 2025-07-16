@@ -553,6 +553,16 @@ const AdminDashboard = () => {
                   <label className="block text-sm font-medium mb-2">رقم الهاتف</label>
                   <Input defaultValue="+966 50 123 4567" />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">رقم واتساب للتواصل</label>
+                  <Input 
+                    placeholder="+966501234567" 
+                    defaultValue="+966501234567"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    سيظهر زر واتساب عائم في جميع صفحات المستخدمين
+                  </p>
+                </div>
                 <Button>حفظ التغييرات</Button>
               </CardContent>
             </Card>
