@@ -198,13 +198,28 @@ const Home = () => {
           
           {/* Decorative Islamic pattern */}
           <div className="mt-16 relative">
-            <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-3xl p-8 md:p-12 text-center border border-primary/20">
+            <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-3xl p-8 md:p-12 text-center border border-primary/20 relative overflow-hidden">
               {/* Islamic geometric pattern background */}
-              <div className="absolute inset-0 opacity-5 rounded-3xl overflow-hidden">
+              <div className="absolute inset-0 opacity-8 rounded-3xl overflow-hidden">
                 <img 
-                  src="https://images.pexels.com/photos/8111357/pexels-photo-8111357.jpeg?auto=compress&cs=tinysrgb&w=800" 
-                  alt="Islamic geometric pattern" 
+                  src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=800" 
+                  alt="Quran and Islamic calligraphy" 
                   className="w-full h-full object-cover"
+                />
+              </div>
+              {/* Additional Islamic elements */}
+              <div className="absolute top-4 right-4 w-12 h-12 opacity-15">
+                <img 
+                  src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=200" 
+                  alt="Islamic star" 
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </div>
+              <div className="absolute bottom-4 left-4 w-12 h-12 opacity-15">
+                <img 
+                  src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=200" 
+                  alt="Islamic crescent" 
+                  className="w-full h-full object-cover rounded-full"
                 />
               </div>
               <div className="max-w-3xl mx-auto">
@@ -215,21 +230,52 @@ const Home = () => {
                   صدق الله العظيم - سورة القمر
                 </p>
               </div>
-            </div>
+        <div className="absolute top-10 right-10 w-32 h-32 opacity-10">
           </div>
-        </div>
-      </section>
+            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=400" 
+            alt="Islamic calligraphy" 
 
       {/* Features Section */}
       <section className="py-20 bg-background">
-       {/* Islamic calligraphy background */}
+        <div className="absolute bottom-20 left-10 w-24 h-24 opacity-10">
        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-5">
-         <img 
-           src="https://images.pexels.com/photos/8111357/pexels-photo-8111357.jpeg?auto=compress&cs=tinysrgb&w=1200" 
+            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=400" 
+            alt="Quran pages" 
            alt="Islamic calligraphy" 
            className="w-full h-full object-cover"
          />
-       </div>
+        <div className="absolute top-1/2 left-20 w-20 h-20 opacity-8">
+          <img 
+            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+            alt="Islamic geometric pattern" 
+            className="w-full h-full object-cover rounded-full"
+          />
+        </div>
+        {/* Islamic calligraphy and Quran background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 opacity-5">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=1200" 
+              alt="Islamic calligraphy and Quran" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          {/* Floating Islamic elements */}
+          <div className="absolute top-20 right-1/4 w-16 h-16 opacity-10">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Mosque minaret" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute bottom-32 left-1/4 w-20 h-20 opacity-10">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Islamic lantern" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        </div>
        
         <div className="container mx-auto px-4">
           <div className="text-center space-y-4 mb-16">
@@ -261,6 +307,24 @@ const Home = () => {
 
       {/* How It Works Section */}
       <section className="py-20 bg-muted/30">
+        {/* Prayer beads background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-10 left-10 w-24 h-24 opacity-8">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Prayer beads" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute bottom-20 right-20 w-28 h-28 opacity-8">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Islamic compass" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        </div>
+        
         <div className="container mx-auto px-4">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold">رحلتك معنا في 3 خطوات بسيطة</h2>
@@ -292,13 +356,28 @@ const Home = () => {
 
       {/* Teachers Section */}
       <section className="py-20 bg-background">
-        {/* Mosque silhouette background */}
+        {/* Mosque and Islamic architecture background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-96 h-32 opacity-10">
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-96 h-32 opacity-12">
             <img 
-              src="https://images.pexels.com/photos/8111357/pexels-photo-8111357.jpeg?auto=compress&cs=tinysrgb&w=800" 
-              alt="Mosque silhouette" 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=800" 
+              alt="Beautiful mosque architecture" 
               className="w-full h-full object-cover"
+            />
+          </div>
+          {/* Additional mosque elements */}
+          <div className="absolute top-16 right-16 w-20 h-20 opacity-8">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Mosque dome detail" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute top-32 left-16 w-16 h-16 opacity-8">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Islamic arch" 
+              className="w-full h-full object-cover rounded-full"
             />
           </div>
         </div>
@@ -336,6 +415,31 @@ const Home = () => {
 
       {/* Subscription Packages Section */}
       <section className="py-20 bg-muted/30">
+        {/* Islamic patterns and decorations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-8 w-16 h-16 opacity-8">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Islamic geometric tile" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute top-1/3 right-8 w-20 h-20 opacity-8">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Islamic medallion" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute bottom-1/4 left-1/3 w-12 h-12 opacity-8">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Islamic border pattern" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        </div>
+        
         <div className="container mx-auto px-4">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold">اختر الباقة التي تناسبك</h2>
@@ -389,6 +493,31 @@ const Home = () => {
 
       {/* Testimonials Section */}
       <section className="py-20 bg-background">
+        {/* Quran and Islamic books background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-1/4 w-24 h-24 opacity-8">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Open Quran" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute bottom-32 right-1/4 w-20 h-20 opacity-8">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Islamic books stack" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute top-1/2 right-12 w-16 h-16 opacity-8">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Quran with bookmark" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        </div>
+        
         <div className="container mx-auto px-4">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold">ماذا قال طلابنا عنا؟</h2>
@@ -422,6 +551,24 @@ const Home = () => {
 
       {/* FAQ Section */}
       <section className="py-20 bg-muted/30">
+        {/* Islamic wisdom and knowledge symbols */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-16 right-1/3 w-18 h-18 opacity-8">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Islamic pen and ink" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute bottom-24 left-1/3 w-22 h-22 opacity-8">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Islamic scroll" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        </div>
+        
         <div className="container mx-auto px-4">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold">الأسئلة الشائعة</h2>
@@ -449,13 +596,42 @@ const Home = () => {
 
       {/* Final CTA Section */}
       <section className="py-20 bg-gradient-to-r from-primary to-secondary">
-        {/* Islamic star pattern overlay */}
+        {/* Islamic night sky and stars overlay */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 opacity-12">
             <img 
-              src="https://images.pexels.com/photos/8111357/pexels-photo-8111357.jpeg?auto=compress&cs=tinysrgb&w=1200" 
-              alt="Islamic star pattern" 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=1200" 
+              alt="Islamic night sky with crescent moon" 
               className="w-full h-full object-cover"
+            />
+          </div>
+          {/* Floating Islamic elements */}
+          <div className="absolute top-12 left-12 w-16 h-16 opacity-15">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Crescent moon" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute top-20 right-20 w-12 h-12 opacity-15">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Islamic star" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute bottom-16 left-1/4 w-14 h-14 opacity-15">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Islamic lantern" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute bottom-20 right-1/3 w-10 h-10 opacity-15">
+            <img 
+              src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+              alt="Islamic dome silhouette" 
+              className="w-full h-full object-cover rounded-full"
             />
           </div>
         </div>

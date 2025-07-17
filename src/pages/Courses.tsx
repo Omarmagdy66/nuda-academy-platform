@@ -72,6 +72,31 @@ const Courses = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Islamic educational background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-24 right-12 w-24 h-24 opacity-8">
+          <img 
+            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+            alt="Quran with bookmark" 
+            className="w-full h-full object-cover rounded-full"
+          />
+        </div>
+        <div className="absolute bottom-32 left-16 w-20 h-20 opacity-8">
+          <img 
+            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+            alt="Islamic books" 
+            className="w-full h-full object-cover rounded-full"
+          />
+        </div>
+        <div className="absolute top-1/2 left-12 w-16 h-16 opacity-8">
+          <img 
+            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+            alt="Islamic learning tools" 
+            className="w-full h-full object-cover rounded-full"
+          />
+        </div>
+      </div>
+      
       {/* Header */}
       <div className="text-center space-y-4 mb-12">
         <h1 className="text-4xl md:text-5xl font-bold text-gradient">

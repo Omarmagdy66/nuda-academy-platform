@@ -361,6 +361,24 @@ const AdminDashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Islamic administrative background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 right-20 w-20 h-20 opacity-5">
+          <img 
+            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+            alt="Islamic manuscript" 
+            className="w-full h-full object-cover rounded-full"
+          />
+        </div>
+        <div className="absolute bottom-40 left-16 w-18 h-18 opacity-5">
+          <img 
+            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+            alt="Islamic geometric design" 
+            className="w-full h-full object-cover rounded-full"
+          />
+        </div>
+      </div>
+      
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>

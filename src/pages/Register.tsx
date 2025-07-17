@@ -75,6 +75,24 @@ const Register = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Islamic registration background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-16 right-16 w-20 h-20 opacity-8">
+          <img 
+            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+            alt="Islamic welcome pattern" 
+            className="w-full h-full object-cover rounded-full"
+          />
+        </div>
+        <div className="absolute bottom-24 left-12 w-18 h-18 opacity-8">
+          <img 
+            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
+            alt="Islamic door pattern" 
+            className="w-full h-full object-cover rounded-full"
+          />
+        </div>
+      </div>
+      
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center space-y-4 mb-8">
