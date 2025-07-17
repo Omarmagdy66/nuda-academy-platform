@@ -18,6 +18,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const navItems = [
     { name: 'الرئيسية', path: '/', icon: Home },
     { name: 'الدورات', path: '/courses', icon: BookOpen },
+    { name: 'تسجيل الدخول', path: '/login', icon: User },
     { name: 'لوحة الطالب', path: '/dashboard', icon: User },
     { name: 'التسجيل', path: '/register', icon: UserPlus },
   ];
