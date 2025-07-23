@@ -267,7 +267,7 @@ const AdminDashboard = () => {
     input.type = 'file';
     input.accept = 'video/*,audio/*,application/pdf';
     input.onchange = (e) => {
-      const file = e.target.files[0];
+      const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
         const newLecture = {
           id: lectures.length + 1,
