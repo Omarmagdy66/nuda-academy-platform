@@ -13,6 +13,25 @@ const Index = () => {
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-amber-50 dark:from-emerald-950 dark:via-background dark:to-amber-950">
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-amber-600/10"></div>
+        
+        {/* Background Islamic Images */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 right-20 w-32 h-32 opacity-10 dark:opacity-5">
+            <img 
+              src="/placeholder.svg?height=200&width=200&text=🕌" 
+              alt="Islamic Architecture" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute bottom-32 left-16 w-24 h-24 opacity-10 dark:opacity-5">
+            <img 
+              src="/placeholder.svg?height=150&width=150&text=⭐" 
+              alt="Islamic Stars" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        </div>
+        
         <div className="container relative py-20 lg:py-32">
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
@@ -112,8 +131,26 @@ const Index = () => {
       </section>
 
       {/* Teachers Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container">
+      <section className="py-20 bg-muted/30 relative overflow-hidden">
+        {/* Background Islamic Pattern */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-10 left-10 w-20 h-20 opacity-5">
+            <img 
+              src="/placeholder.svg?height=100&width=100&text=📿" 
+              alt="Islamic Pattern" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute bottom-10 right-10 w-16 h-16 opacity-5">
+            <img 
+              src="/placeholder.svg?height=80&width=80&text=🌙" 
+              alt="Islamic Crescent" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        </div>
+        
+        <div className="container relative">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold sm:text-4xl">تعرّف على معلميك المهرة</h2>
           </div>
@@ -247,8 +284,26 @@ const Index = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 bg-muted/30">
-        <div className="container">
+      <section className="py-20 bg-muted/30 relative overflow-hidden">
+        {/* Background Islamic Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-16 right-16 w-24 h-24 opacity-5">
+            <img 
+              src="/placeholder.svg?height=120&width=120&text=🕌" 
+              alt="Mosque Silhouette" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div className="absolute bottom-20 left-20 w-20 h-20 opacity-5">
+            <img 
+              src="/placeholder.svg?height=100&width=100&text=📖" 
+              alt="Quran Book" 
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        </div>
+        
+        <div className="container relative">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold sm:text-4xl">ماذا قال طلابنا عنا؟</h2>
           </div>
