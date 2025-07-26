@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { CheckCircle, Users, Clock, Star, BookOpen, Heart, Award } from 'lucide-react';
+import { CheckCircle, Users, Clock, Star, BookOpen, Heart, Award, Target, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -93,6 +93,28 @@ const Index = () => {
               </Button>
             </motion.div>
           </div>
+        </div>
+      </motion.section>
+
+      {/* Bismillah Section */}
+      <motion.section
+        className="py-16"
+        initial="hidden"
+        whileInView="visible"
+        variants={sectionVariants}
+        viewport={{ once: true, amount: 0.3 }}
+      >
+        <div className="container mx-auto px-4">
+          <Card className="bg-gradient-to-br from-emerald-50 via-white to-amber-50 dark:from-emerald-950/80 dark:via-background dark:to-amber-950/80 border-2 border-emerald-100/80 dark:border-emerald-900/50 shadow-lg">
+            <CardContent className="p-8 md:p-12 text-center">
+              <h2 className="font-cairo text-5xl md:text-7xl text-emerald-600/70 dark:text-emerald-400/70 leading-relaxed" style={{ fontFamily: "'Noto Naskh Arabic', serif" }}>
+                بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+              </h2>
+              <p className="mt-6 text-lg text-amber-700/90 dark:text-amber-400/90 font-medium">
+                "وَلَقَدْ يَسَّرْنَا الْقُرْآنَ لِلذِّكْرِ فَهَلْ مِن مُّدَّكِرٍ"
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </motion.section>
 
