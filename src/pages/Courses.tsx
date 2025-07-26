@@ -72,31 +72,6 @@ const Courses = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Islamic educational background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-24 right-12 w-24 h-24 opacity-8">
-          <img 
-            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
-            alt="Quran with bookmark" 
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-        <div className="absolute bottom-32 left-16 w-20 h-20 opacity-8">
-          <img 
-            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
-            alt="Islamic books" 
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-        <div className="absolute top-1/2 left-12 w-16 h-16 opacity-8">
-          <img 
-            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
-            alt="Islamic learning tools" 
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-      </div>
-      
       {/* Header */}
       <div className="text-center space-y-4 mb-12">
         <h1 className="text-4xl md:text-5xl font-bold text-gradient">
@@ -166,39 +141,6 @@ const Courses = () => {
             </CardFooter>
           </Card>
         ))}
-      </div>
-
-      {/* Additional Info Section */}
-      <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-        <Card className="text-center p-6">
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <BookOpen className="w-6 h-6 text-primary" />
-          </div>
-          <h3 className="font-semibold text-lg mb-2">شهادات معتمدة</h3>
-          <p className="text-muted-foreground text-sm">
-            احصل على شهادة معتمدة عند إتمام الدورة بنجاح
-          </p>
-        </Card>
-
-        <Card className="text-center p-6">
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Users className="w-6 h-6 text-primary" />
-          </div>
-          <h3 className="font-semibold text-lg mb-2">معلمون متخصصون</h3>
-          <p className="text-muted-foreground text-sm">
-            تعلم على يد معلمين حاصلين على إجازات في القرآن الكريم
-          </p>
-        </Card>
-
-        <Card className="text-center p-6">
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Clock className="w-6 h-6 text-primary" />
-          </div>
-          <h3 className="font-semibold text-lg mb-2">مرونة في التوقيت</h3>
-          <p className="text-muted-foreground text-sm">
-            اختر الأوقات التي تناسبك من الجدول المتاح
-          </p>
-        </Card>
       </div>
     </div>
   );

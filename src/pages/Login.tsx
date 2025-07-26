@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { Eye, EyeOff, User, Lock, BookOpen } from 'lucide-react';
 
 const Login = () => {
@@ -75,37 +75,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
-      {/* Islamic background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 right-20 w-32 h-32 opacity-8">
-          <img 
-            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=400" 
-            alt="Islamic geometric pattern" 
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-        <div className="absolute bottom-32 left-16 w-28 h-28 opacity-8">
-          <img 
-            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=400" 
-            alt="Mosque dome" 
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-        <div className="absolute top-1/2 left-8 w-20 h-20 opacity-8">
-          <img 
-            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
-            alt="Islamic calligraphy" 
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-        <div className="absolute top-32 right-1/3 w-16 h-16 opacity-8">
-          <img 
-            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
-            alt="Islamic star pattern" 
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-      </div>
       
       <div className="w-full max-w-md">
         {/* Header */}
@@ -233,14 +202,6 @@ const Login = () => {
         {/* Islamic Quote */}
         <div className="mt-8 text-center">
           <div className="bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg p-4 border border-primary/20 relative overflow-hidden">
-            {/* Background Islamic pattern */}
-            <div className="absolute inset-0 opacity-5">
-              <img 
-                src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=600" 
-                alt="Quran background" 
-                className="w-full h-full object-cover"
-              />
-            </div>
             <p className="text-primary font-semibold text-lg mb-2">
               ﴿ وَقُل رَّبِّ زِدْنِي عِلْماً ﴾
             </p>

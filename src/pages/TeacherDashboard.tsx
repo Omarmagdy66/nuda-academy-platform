@@ -157,7 +157,10 @@ const TeacherDashboard = () => {
   const handleViewStudent = (student) => {
     toast({
       title: "تفاصيل الطالب",
-      description: `الاسم: ${student.name}\nالدورة: ${student.course}\nالتقدم: ${student.progress}%\nالحضور: ${student.attendance}%`
+      description: `الاسم: ${student.name}
+الدورة: ${student.course}
+التقدم: ${student.progress}%
+الحضور: ${student.attendance}%`
     });
   };
 
@@ -239,31 +242,6 @@ const TeacherDashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Islamic background elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-16 right-16 w-24 h-24 opacity-6">
-          <img 
-            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
-            alt="Open Quran" 
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-        <div className="absolute bottom-32 left-12 w-20 h-20 opacity-6">
-          <img 
-            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
-            alt="Islamic calligraphy pen" 
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-        <div className="absolute top-1/3 left-8 w-16 h-16 opacity-6">
-          <img 
-            src="https://images.pexels.com/photos/6032877/pexels-photo-6032877.jpeg?auto=compress&cs=tinysrgb&w=300" 
-            alt="Prayer beads" 
-            className="w-full h-full object-cover rounded-full"
-          />
-        </div>
-      </div>
-      
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>
