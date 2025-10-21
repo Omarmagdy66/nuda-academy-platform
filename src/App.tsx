@@ -10,9 +10,10 @@ import Home from "./pages/Home";
 import Packages from "./pages/Packages";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
+// import Dashboard from "./pages/Dashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminDashboardV2 from "./pages/AdminDashboardV2";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
 import ScrollToTop from "./components/ScrollToTop";
@@ -34,9 +35,10 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              {/* <Route path="/dashboard" element={<Dashboard />} /> */}
               <Route path="/teacher" element={<TeacherDashboard />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/v2" element={<AdminDashboardV2 />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>

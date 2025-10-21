@@ -19,9 +19,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { name: 'الباقات', path: '/packages', icon: Package },
     { name: 'من نحن', path: '/about', icon: Info },
     { name: 'تسجيل الدخول', path: '/login', icon: User },
-    { name: 'لوحة الطالب', path: '/dashboard', icon: User },
     { name: 'التسجيل', path: '/register', icon: UserPlus },
-  ];
+  ].filter(item => item.path !== '/dashboard'); // Filter out the dashboard link
 
   return (
     <div className="min-h-screen bg-background">
