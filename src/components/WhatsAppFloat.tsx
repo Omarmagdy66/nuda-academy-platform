@@ -1,35 +1,99 @@
-import React from 'react';
-import { MessageCircle } from 'lucide-react';
+
+import React, { useState, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { WhatsAppIcon } from './Icons'; // Assuming you have a WhatsApp icon component
+import { X, MessageCircle } from 'lucide-react';
 
 interface WhatsAppFloatProps {
   phoneNumber: string;
 }
 
 const WhatsAppFloat: React.FC<WhatsAppFloatProps> = ({ phoneNumber }) => {
-  const handleWhatsAppClick = () => {
-    if (phoneNumber) {
-      const cleanNumber = phoneNumber.replace(/[^\d+]/g, '');
-      const message = encodeURIComponent('مرحباً، أود الاستفسار عن دورات أكاديمية نور الهُدى');
-      window.open(`https://wa.me/${cleanNumber}?text=${message}`, '_blank');
-    }
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const cleanPhoneNumber = phoneNumber.replace(/[^\d+]/g, '');
+  const defaultMessage = encodeURIComponent('مرحباً، أود الاستفسار عن باقات أكاديمية نور الهُدى');
+  const whatsAppUrl = `https://wa.me/${cleanPhoneNumber}?text=${defaultMessage}`;
+
+  const handleMouseEnter = () => {
+    hoverTimeout.current = setTimeout(() => {
+      setIsChatOpen(true);
+    }, 500); // 0.5 second delay
   };
 
-  if (!phoneNumber) {
-    return null;
-  }
+  const handleMouseLeave = () => {
+    if (hoverTimeout.current) {
+      clearTimeout(hoverTimeout.current);
+    }
+    setIsChatOpen(false);
+  };
 
   return (
-    <button
-      onClick={handleWhatsAppClick}
-      className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 flex items-center justify-center group"
-      aria-label="تواصل عبر واتساب"
+    <div 
+      className="fixed bottom-6 right-6 z-50" 
+      onMouseEnter={handleMouseEnter} 
+      onMouseLeave={handleMouseLeave}
     >
-      <MessageCircle className="w-7 h-7" />
-      <span className="absolute right-16 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-        تواصل عبر واتساب
-      </span>
-    </button>
+      <AnimatePresence>
+        {isChatOpen ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="w-80 h-auto bg-card border shadow-xl rounded-lg overflow-hidden"
+          >
+            <div className="bg-primary/90 p-4 flex items-center justify-between">
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <WhatsAppIcon className="w-6 h-6 text-primary-foreground" />
+                <span className="font-semibold text-primary-foreground">WhatsApp</span>
+              </div>
+              <button onClick={() => setIsChatOpen(false)} className="text-primary-foreground/80 hover:text-primary-foreground">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-5 bg-card">
+              <div className="flex flex-col items-start space-y-4">
+                <div className="bg-muted p-3 rounded-lg rounded-br-none self-end max-w-xs">
+                  <p className="text-sm text-right">نرحب باستفساراتكم</p>
+                </div>
+                <a 
+                  href={whatsAppUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full"
+                >
+                  <motion.div 
+                    whileHover={{ scale: 1.03 }}
+                    className="bg-primary/90 text-primary-foreground p-3 rounded-full flex items-center justify-center space-x-2 space-x-reverse cursor-pointer"
+                  >
+                    <MessageCircle size={20}/>
+                    <span className="font-medium">تواصل معنا الآن</span>
+                  </motion.div>
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.a
+            href={whatsAppUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            whileHover={{ scale: 1.1, rotate: 10 }}
+            transition={{ duration: 0.3 }}
+            className="w-16 h-16 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg cursor-pointer"
+          >
+            <WhatsAppIcon className="w-8 h-8" />
+          </motion.a>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
 export default WhatsAppFloat;
+

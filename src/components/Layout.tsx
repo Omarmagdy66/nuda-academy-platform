@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import WhatsAppFloat from './WhatsAppFloat';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { User, BookOpen, Home, UserPlus, Menu, X, Info } from 'lucide-react';
+import { User, BookOpen, Home, UserPlus, Menu, X, Info, Package } from 'lucide-react';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -16,7 +16,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const navItems = [
     { name: 'الرئيسية', path: '/', icon: Home },
-    { name: 'الدورات', path: '/courses', icon: BookOpen },
+    { name: 'الباقات', path: '/packages', icon: Package },
     { name: 'من نحن', path: '/about', icon: Info },
     { name: 'تسجيل الدخول', path: '/login', icon: User },
     { name: 'لوحة الطالب', path: '/dashboard', icon: User },
@@ -132,7 +132,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <h4 className="font-medium mb-4">روابط سريعة</h4>
               <ul className="space-y-2 text-sm text-muted-foreground dark:text-gray-400">
                 <li><Link to="/" className="hover:text-primary transition-colors">الرئيسية</Link></li>
-                <li><Link to="/courses" className="hover:text-primary transition-colors">الدورات</Link></li>
+                <li><Link to="/packages" className="hover:text-primary transition-colors">الباقات</Link></li>
                 <li><Link to="/about" className="hover:text-primary transition-colors">من نحن</Link></li>
                 <li><Link to="/register" className="hover:text-primary transition-colors">التسجيل</Link></li>
               </ul>
