@@ -1,0 +1,15 @@
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\bin\Release\net9.0\QuranAcademy.DAL.deps.json
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\bin\Release\net9.0\QuranAcademy.DAL.dll
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\bin\Release\net9.0\QuranAcademy.DAL.pdb
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\bin\Release\net9.0\QuranAcademy.Entites.dll
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\bin\Release\net9.0\QuranAcademy.Entites.pdb
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\obj\Release\net9.0\QuranAcademy.DAL.csproj.AssemblyReference.cache
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\obj\Release\net9.0\QuranAcademy.DAL.GeneratedMSBuildEditorConfig.editorconfig
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\obj\Release\net9.0\QuranAcademy.DAL.AssemblyInfoInputs.cache
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\obj\Release\net9.0\QuranAcademy.DAL.AssemblyInfo.cs
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\obj\Release\net9.0\QuranAcademy.DAL.csproj.CoreCompileInputs.cache
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\obj\Release\net9.0\QuranAca.7E38550E.Up2Date
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\obj\Release\net9.0\QuranAcademy.DAL.dll
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\obj\Release\net9.0\refint\QuranAcademy.DAL.dll
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\obj\Release\net9.0\QuranAcademy.DAL.pdb
+F:\.net\Project\Quran Academy\QuranAcademy.DAL\obj\Release\net9.0\ref\QuranAcademy.DAL.dll
