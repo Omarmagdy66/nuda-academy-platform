@@ -9,14 +9,14 @@ import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Packages from "./pages/Packages";
 import Register from "./pages/Register";
-import Login from "./pages/Login";
-// import Dashboard from "./pages/Dashboard";
-import TeacherDashboard from "./pages/TeacherDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminDashboardV2 from "./pages/AdminDashboardV2";
-import NotFound from "./pages/NotFound";
 import About from "./pages/About";
+import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
+
+// --- Updated Imports ---
+import LoginPage from "./pages/LoginPage"; // Our new login page
+import AdminDashboardV2 from "./pages/AdminDashboardV2";
+import ProtectedRoute from "./components/ProtectedRoute"; // Our new protected route component
 
 const queryClient = new QueryClient();
 
@@ -28,20 +28,28 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
-          <Layout>
-            <Routes>
+          {/* Layout is used for public-facing pages with Navbar and Footer */}
+          <Routes>
+            {/* --- Public Routes --- */}
+            <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
               <Route path="/packages" element={<Packages />} />
               <Route path="/about" element={<About />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
-              {/* <Route path="/dashboard" element={<Dashboard />} /> */}
-              <Route path="/teacher" element={<TeacherDashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/v2" element={<AdminDashboardV2 />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
+            </Route>
+
+            {/* --- Auth Route (doesn't use the main layout) --- */}
+            <Route path="/login" element={<LoginPage />} />
+
+            {/* --- Protected Admin Route --- */}
+            <Route path="/admin" element={<ProtectedRoute />}>
+               {/* This route will only be accessible if the user is logged in */}
+               <Route index element={<AdminDashboardV2 />} />
+            </Route>
+
+            {/* --- Not Found Route --- */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
