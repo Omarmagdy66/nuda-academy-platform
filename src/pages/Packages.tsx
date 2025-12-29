@@ -1,131 +1,120 @@
 
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CheckCircle, Loader2 } from "lucide-react"
+import { Link } from "react-router-dom"
+import { motion } from "framer-motion"
+import { useQuery } from "@tanstack/react-query"
 
-// --- API Base URL ---
-const API_BASE_URL = "https://tibyanacademy.runasp.net";
-
+// --- Define Package Type ---
 interface Package {
   id: number;
   name: string;
-  description: string;
   price: number;
-  features: string; // Comma-separated string
-  isMostPopular: boolean;
+  features: string[];
+  isActive: boolean;
 }
 
-const sectionVariants = {
-  hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut', staggerChildren: 0.2 } }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
-};
+// --- API function to fetch active packages ---
+const fetchActivePackages = async (): Promise<Package[]> => {
+  const response = await fetch("https://tibyanacademy.runasp.net/api/Packages/GetAllPackages");
+  if (!response.ok) {
+    throw new Error("Failed to fetch packages.");
+  }
+  const allPackages: Package[] = await response.json();
+  return allPackages.filter(pkg => pkg.isActive);
+}
 
 const Packages = () => {
-  const [packages, setPackages] = useState<Package[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: packages, isLoading, error } = useQuery<Package[], Error>({
+    queryKey: ['activePackages'],
+    queryFn: fetchActivePackages,
+  });
 
-  useEffect(() => {
-    const fetchPackages = async () => {
-      setIsLoading(true);
-      try {
-        const response = await axios.get<Package[]>(`${API_BASE_URL}/api/packages`);
-        setPackages(response.data);
-      } catch (error) {
-        console.error("Failed to fetch packages:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchPackages();
-  }, []);
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.15, delayChildren: 0.2 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5 }
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="container py-20 flex justify-center items-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-20 text-center">
+        <h2 className="text-2xl font-bold text-destructive">حدث خطأ</h2>
+        <p className="text-muted-foreground">لم نتمكن من جلب الباقات. الرجاء المحاولة مرة أخرى لاحقاً.</p>
+      </div>
+    )
+  }
 
   return (
-    <div className="bg-background">
-      {/* Hero Section */}
-      <motion.section
-        className="py-20 md:py-32 bg-gradient-to-br from-primary/10 via-background to-secondary/10"
-        initial="hidden" animate="visible" variants={sectionVariants}
-      >
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-gradient mb-4">باقاتنا التعليمية</h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-            اختر الباقة التي تناسب أهدافك وميزانيتك، وابدأ رحلتك في حفظ وتلاوة القرآن الكريم معنا.
-          </p>
-        </div>
-      </motion.section>
+    <div className="container py-20">
+      <div className="text-center mb-16">
+        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4">
+          اختر الباقة التي تناسبك
+        </h1>
+        <p className="max-w-2xl mx-auto text-lg text-muted-foreground">
+          نقدم باقات متنوعة مصممة لتلبية احتياجاتك التعليمية وميزانيتك.
+        </p>
+      </div>
 
-      {/* Pricing Section */}
-      <motion.section
-        className="py-20"
-        variants={sectionVariants} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
       >
-        <div className="container">
-          <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch" variants={sectionVariants}>
-            {isLoading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i} className="flex flex-col">
-                  <CardHeader className="text-center pb-6">
-                    <Skeleton className="h-7 w-1/2 mx-auto mb-2" />
-                    <Skeleton className="h-4 w-3/4 mx-auto mb-4" />
-                    <Skeleton className="h-8 w-1/3 mx-auto" />
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <div className="space-y-4">
-                      <Skeleton className="h-5 w-full" />
-                      <Skeleton className="h-5 w-full" />
-                      <Skeleton className="h-5 w-full" />
-                    </div>
-                  </CardContent>
-                  <div className="p-6 pt-0 mt-auto">
-                    <Skeleton className="h-12 w-full" />
-                  </div>
-                </Card>
-              ))
-            ) : (
-              packages.map(pkg => (
-                <motion.div variants={itemVariants} key={pkg.id} className="h-full">
-                  <Card className={`h-full flex flex-col ${pkg.isMostPopular ? 'border-2 border-primary' : ''} relative`}>
-                    {pkg.isMostPopular && (
-                      <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary">الأكثر شيوعاً</Badge>
-                    )}
-                    <CardHeader className="text-center pb-6">
-                      <CardTitle className="text-2xl mb-2">{pkg.name}</CardTitle>
-                      <CardDescription>{pkg.description}</CardDescription>
-                      <div className="text-4xl font-bold mt-4">{pkg.price} <span className="text-lg font-medium text-muted-foreground">ر.س/شهرياً</span></div>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                      <ul className="space-y-4 text-muted-foreground">
-                        {pkg.features.split(',').map((feature, index) => (
-                          <li key={index} className="flex items-start gap-3">
-                            <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
-                            <span>{feature.trim()}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                    <div className="p-6 pt-0 mt-auto">
-                      <Button asChild className="w-full text-lg mt-6" variant={pkg.isMostPopular ? 'default' : 'outline'}>
-                        <Link to="/register">اختر الباقة</Link>
-                      </Button>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))
-            )}
+        {packages?.map(pkg => (
+          <motion.div variants={itemVariants} key={pkg.id}>
+            <Card className={`relative h-full flex flex-col`}>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">{pkg.name}</CardTitle>
+                <div className="text-4xl font-bold my-4">${pkg.price} <span className="text-lg font-normal text-muted-foreground">/شهرياً</span></div>
+              </CardHeader>
+              <CardContent className="flex flex-col flex-grow">
+                <ul className="space-y-4 mb-8 flex-grow">
+                  {/* Assuming features is an array of strings from the API */}
+                  {pkg.features.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button asChild className="w-full mt-auto text-lg py-6">
+                  <Link to={`/register?packageId=${pkg.id}`}>اشترك الآن</Link>
+                </Button>
+              </CardContent>
+            </Card>
           </motion.div>
-        </div>
-      </motion.section>
+        ))}
+      </motion.div>
+
+       {packages && packages.length === 0 && (
+          <div className="text-center col-span-full py-12">
+              <h3 className="text-xl font-semibold">لا توجد باقات متاحة حالياً</h3>
+              <p className="text-muted-foreground mt-2">يرجى العودة لاحقاً أو التواصل معنا لمزيد من المعلومات.</p>
+          </div>
+        )}
+
     </div>
   );
 };

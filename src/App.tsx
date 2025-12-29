@@ -8,7 +8,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Packages from "./pages/Packages";
-import Register from "./pages/Register";
+import Register from "./pages/Register"; // Kept for future use
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
@@ -22,7 +22,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="light" storageKey="noor-alhuda-theme">
+    <ThemeProvider defaultTheme="light" storageKey="sanad-alqurra-theme">
       <TooltipProvider>
         <Toaster />
         <Sonner />

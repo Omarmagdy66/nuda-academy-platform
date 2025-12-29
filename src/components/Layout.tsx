@@ -1,17 +1,39 @@
 
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useLocation, Outlet } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import WhatsAppFloat from './WhatsAppFloat';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { User, BookOpen, Home, UserPlus, Menu, X, Info, Package } from 'lucide-react';
+import { User, Home, UserPlus, Menu, X, Info, Package, Mail, Phone, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+// --- Data Fetching ---
+interface SiteContentDto {
+  email: string;
+  phone: string;
+}
+
+const fetchSiteContent = async (): Promise<SiteContentDto> => {
+  const response = await fetch('https://tibyanacademy.runasp.net/api/SiteContents/GetSiteContent');
+  if (!response.ok) {
+    // Return default values on error (e.g., 404 Not Found)
+    return { email: 'info@nooralhudaacademy.com', phone: '+966501234567' };
+  }
+  return response.json();
+};
+
+
+const Layout = () => {
   const location = useLocation();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  
-  const whatsappNumber = '+966501234567';
+
+  const { data: siteContent, isLoading } = useQuery<SiteContentDto>({
+    queryKey: ['siteContentLayout'],
+    queryFn: fetchSiteContent,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
   const isAdminPage = location.pathname.includes('/admin');
 
   const navItems = [
@@ -20,25 +42,27 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     { name: 'من نحن', path: '/about', icon: Info },
     { name: 'تسجيل الدخول', path: '/login', icon: User },
     { name: 'التسجيل', path: '/register', icon: UserPlus },
-  ].filter(item => item.path !== '/dashboard'); // Filter out the dashboard link
+  ];
+
+  const publicNavItems = navItems.filter(item => item.path !== '/login');
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center space-x-4 space-x-reverse">
             <Link to="/" className="flex items-center space-x-2 space-x-reverse">
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">ن</span>
+                <span className="text-white font-bold text-sm">س</span>
               </div>
-              <span className="font-bold text-lg text-gradient">أكاديمية نور الهُدى</span>
+              <span className="font-bold text-lg text-gradient">أكاديمية سندُ القرَّاء</span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6 space-x-reverse">
-            {navItems.map((item) => (
+            {publicNavItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
@@ -80,7 +104,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     </div>
                     
                     <nav className="flex flex-col space-y-4 mt-6">
-                      {navItems.map((item) => (
+                      {publicNavItems.map((item) => (
                         <SheetClose key={item.path} asChild>
                           <Link
                             to={item.path}
@@ -114,7 +138,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Main Content */}
       <main className="flex-1">
-        {children}
+        <Outlet />
       </main>
 
       {/* Footer */}
@@ -122,7 +146,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="container py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="font-semibold text-lg mb-4">أكاديمية نور الهُدى</h3>
+              <h3 className="font-semibold text-lg mb-4">أكاديمية سندُ القرَّاء</h3>
               <p className="text-muted-foreground dark:text-gray-400 text-sm">
                 رحلتك مع القرآن الكريم تبدأ هنا. تعلم واحفظ وارتقِ من أي مكان في العالم مع أفضل المعلمين.
               </p>
@@ -138,19 +162,31 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </div>
             <div>
               <h4 className="font-medium mb-4">اتصل بنا</h4>
-              <div className="space-y-2 text-sm text-muted-foreground dark:text-gray-400">
-                <p>البريد الإلكتروني: info@nooralhudalacademy.com</p>
-                <p>الهاتف: +966 50 123 4567</p>
-              </div>
+              {isLoading ? (
+                <div className="space-y-2">
+                    <div className="flex items-center space-x-2 space-x-reverse"><Loader2 className="h-4 w-4 animate-spin"/> <span>جاري التحميل...</span></div>
+                </div>
+              ) : (
+                <div className="space-y-2 text-sm text-muted-foreground dark:text-gray-400">
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <Mail className="h-4 w-4" />
+                    <a href={`mailto:${siteContent?.email}`}>{siteContent?.email}</a>
+                  </div>
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <Phone className="h-4 w-4" />
+                    <a href={`tel:${siteContent?.phone}`} dir="ltr">{siteContent?.phone}</a>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="mt-8 pt-4 border-t text-center text-sm text-muted-foreground dark:text-gray-400">
-            <p>© 2024 أكاديمية نور الهُدى. جميع الحقوق محفوظة.</p>
+            <p>© 2024 أكاديمية سندُ القرَّاء. جميع الحقوق محفوظة.</p>
           </div>
         </div>
       </footer>
       
-      {!isAdminPage && <WhatsAppFloat phoneNumber={whatsappNumber} />}
+      {!isAdminPage && siteContent?.phone && <WhatsAppFloat phoneNumber={siteContent.phone} />}
     </div>
   );
 };

@@ -1,238 +1,237 @@
 
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { toast } from "@/components/ui/use-toast";
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Trash2, Edit, PlusCircle } from 'lucide-react';
 
-// --- API Base URL ---
-const API_BASE_URL = "https://tibyanacademy.runasp.net";
-
-// Helper to get the auth token from localStorage
-const getAuthToken = () => localStorage.getItem("authToken");
-
+// --- Type Definitions ---
 interface Testimonial {
   id: number;
   studentName: string;
   country?: string;
-  testimonialText: string;
-  imageUrl?: string;
+  testimonialText?: string;
+  imageUrl?: string; 
   order: number;
   isActive: boolean;
 }
 
-export function TestimonialsManager() {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface TestimonialFormData {
+  id?: number;
+  studentName: string;
+  country: string;
+  testimonialText: string;
+  order: number;
+  isActive: boolean;
+  imageUrl?: File | null; 
+}
+
+const API_BASE_URL = 'https://tibyanacademy.runasp.net/api/testimonials';
+
+// --- API Functions ---
+
+const fetchTestimonials = async (): Promise<Testimonial[]> => {
+  const response = await fetch(`${API_BASE_URL}/GetAllTestimonials`);
+  if (!response.ok) throw new Error('Failed to fetch testimonials');
+  return response.json();
+};
+
+const createOrUpdateTestimonial = async (formData: TestimonialFormData) => {
+  const data = new FormData();
+  data.append('studentName', formData.studentName);
+  data.append('country', formData.country);
+  data.append('testimonialText', formData.testimonialText);
+  data.append('order', formData.order.toString());
+  data.append('isActive', formData.isActive.toString());
+  if (formData.imageUrl) {
+    data.append('ImageUrl', formData.imageUrl);
+  }
+
+  const url = formData.id
+    ? `${API_BASE_URL}/UpdateTestimonial?id=${formData.id}`
+    : `${API_BASE_URL}/AddTestimonial`;
+
+  const method = formData.id ? 'PUT' : 'POST';
+
+  const response = await fetch(url, { method, body: data });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to ${formData.id ? 'update' : 'create'} testimonial: ${errorText}`);
+  }
+  return response.text();
+};
+
+const deleteTestimonial = async (id: number) => {
+  const response = await fetch(`${API_BASE_URL}/DeleteTestimonial?id=${id}`, { method: 'DELETE' });
+  if (!response.ok) throw new Error('Failed to delete testimonial');
+  return response.text();
+};
+
+// --- Component ---
+
+export const TestimonialsManager = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<Testimonial | null>(null);
+  const [editingItem, setEditingItem] = useState<Partial<TestimonialFormData> | null>(null);
 
-  // Form State
-  const [studentName, setStudentName] = useState("");
-  const [country, setCountry] = useState("");
-  const [testimonialText, setTestimonialText] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const { data: testimonials = [], isLoading, error } = useQuery<Testimonial[], Error>({
+    queryKey: ['testimonials'],
+    queryFn: fetchTestimonials,
+  });
 
-  const fetchItems = async () => {
-    try {
-      setIsLoading(true);
-      const token = getAuthToken();
-      const response = await axios.get<Testimonial[]>(`${API_BASE_URL}/api/testimonials/all`, {
-          headers: { Authorization: `Bearer ${token}` }
-      });
-      setTestimonials(response.data);
-    } catch (error) {
-      toast({ title: "خطأ", description: "فشل في جلب آراء الطلاب.", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
+  const mutation = useMutation({
+    mutationFn: createOrUpdateTestimonial,
+    onSuccess: (successMessage) => {
+      toast({ title: "نجاح", description: successMessage || "تمت العملية بنجاح." });
+      queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      setIsDialogOpen(false);
+      setEditingItem(null);
+    },
+    onError: (err) => {
+      toast({ title: "خطأ", description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteTestimonial,
+    onSuccess: (successMessage) => {
+      toast({ title: "نجاح", description: successMessage || "تم الحذف بنجاح" });
+      queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+    },
+    onError: (err) => {
+      toast({ title: "خطأ", description: err.message, variant: 'destructive' });
+    },
+  });
+
+  const openDialogForNew = () => {
+    setEditingItem({ studentName: '', country: '', testimonialText: '', order: 0, isActive: true, imageUrl: null });
+    setIsDialogOpen(true);
+  };
+
+  const openDialogForEdit = (item: Testimonial) => {
+    setEditingItem({ ...item, imageUrl: null });
+    setIsDialogOpen(true);
+  };
+
+  const handleFormSubmit = () => {
+    if (!editingItem) return;
+
+    if (!editingItem.studentName) {
+      toast({ title: "بيانات ناقصة", description: "اسم الطالب حقل مطلوب.", variant: "destructive" });
+      return;
     }
-  };
 
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
-  const resetForm = () => {
-    setStudentName("");
-    setCountry("");
-    setTestimonialText("");
-    setImageUrl(null);
-    setSelectedFile(null);
-    setEditingItem(null);
-    setIsUploading(false);
-  };
-
-  const handleOpenDialogForNew = () => {
-    resetForm();
-    setIsDialogOpen(true);
-  };
-
-  const handleOpenDialogForEdit = (item: Testimonial) => {
-    resetForm();
-    setEditingItem(item);
-    setStudentName(item.studentName);
-    setCountry(item.country || "");
-    setTestimonialText(item.testimonialText);
-    setImageUrl(item.imageUrl || null);
-    setIsDialogOpen(true);
+    mutation.mutate(editingItem as TestimonialFormData);
   };
   
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files?.[0]) {
-      setSelectedFile(event.target.files[0]);
-    }
-  };
-
-  const handleImageUpload = async () => {
-    if (!selectedFile) return;
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    const token = getAuthToken();
-
-    try {
-      const response = await axios.post<{ url: string }>(`${API_BASE_URL}/api/files/upload`, formData, {
-        headers: { 
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`
-        }
-      });
-      setImageUrl(response.data.url);
-      toast({ title: "تم بنجاح", description: "تم رفع الصورة بنجاح." });
-    } catch (error) {
-      toast({ title: "خطأ", description: "فشل في رفع الصورة.", variant: "destructive" });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    const token = getAuthToken();
-    const data = { 
-      studentName, 
-      country, 
-      testimonialText, 
-      imageUrl,
-      order: editingItem?.order || 0,
-      isActive: editingItem?.isActive === undefined ? true : editingItem.isActive
-    };
-    
-    try {
-      if (editingItem) {
-        await axios.put(`${API_BASE_URL}/api/testimonials/${editingItem.id}`, { ...data, id: editingItem.id }, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        toast({ title: "تم بنجاح", description: "تم تحديث الرأي." });
-      } else {
-        await axios.post(`${API_BASE_URL}/api/testimonials`, data, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        toast({ title: "تم بنجاح", description: "تمت إضافة الرأي بنجاح." });
-      }
-      fetchItems();
-      setIsDialogOpen(false);
-    } catch (error) {
-       toast({ title: "خطأ", description: "فشلت عملية الحفظ.", variant: "destructive" });
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("هل أنت متأكد من رغبتك في حذف هذا الرأي؟")) return;
-    const token = getAuthToken();
-    try {
-      await axios.delete(`${API_BASE_URL}/api/testimonials/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-      });
-      toast({ title: "تم الحذف", description: "تم حذف الرأي بنجاح." });
-      fetchItems();
-    } catch (error) {
-      toast({ title: "خطأ", description: "فشل في حذف الرأي.", variant: "destructive" });
-    }
-  };
+  if (isLoading) return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin"/></div>;
+  if (error) return <div className="text-red-500 p-4">خطأ في تحميل البيانات: {error.message}</div>;
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>إدارة آراء الطلاب</CardTitle>
-        <Button onClick={handleOpenDialogForNew}>إضافة رأي جديد</Button>
+      <CardHeader className="flex-row items-center justify-between">
+        <div>
+          <CardTitle>إدارة شهادات الطلاب</CardTitle>
+          <CardDescription>إضافة وتعديل وحذف شهادات وآراء الطلاب.</CardDescription>
+        </div>
+        <Button onClick={openDialogForNew}><PlusCircle className="ml-2 h-4 w-4"/> إضافة شهادة</Button>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>اسم الطالب</TableHead>
-              <TableHead>الرأي</TableHead>
-              <TableHead>إجراءات</TableHead>
+              <TableHead>الصورة</TableHead>
+              <TableHead className="text-right">اسم الطالب</TableHead>
+              <TableHead className="text-right">الدولة</TableHead>
+              <TableHead className="text-right">الترتيب</TableHead>
+              <TableHead className="text-right">الحالة</TableHead>
+              <TableHead className="text-right">الإجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={3} className="text-center">جاري التحميل...</TableCell></TableRow>
-            ) : (
-              testimonials.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{item.studentName}</TableCell>
-                  <TableCell>{item.testimonialText.substring(0, 50)}...</TableCell>
-                  <TableCell className="space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => handleOpenDialogForEdit(item)}>تعديل</Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(item.id)}>حذف</Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+            {testimonials.map(item => (
+              <TableRow key={item.id}>
+                <TableCell>
+                  <img 
+                    src={`https://tibyanacademy.runasp.net${item.imageUrl}` || './placeholder.svg'} 
+                    alt={item.studentName} 
+                    className="h-12 w-12 rounded-full object-cover" 
+                  />
+                </TableCell>
+                <TableCell className="text-right font-medium">{item.studentName}</TableCell>
+                <TableCell className="text-right">{item.country}</TableCell>
+                <TableCell className="text-right">{item.order}</TableCell>
+                <TableCell className="text-right">{item.isActive ? "فعال" : "غير فعال"}</TableCell>
+                <TableCell className="text-right space-x-2 space-x-reverse">
+                  <Button variant="outline" size="sm" onClick={() => openDialogForEdit(item)}><Edit className="h-4 w-4"/></Button>
+                  <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(item.id)} disabled={deleteMutation.isPending}><Trash2 className="h-4 w-4"/></Button>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
-      </CardContent>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingItem ? "تعديل رأي" : "إضافة رأي جديد"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="sName">اسم الطالب</Label>
-              <Input id="sName" value={studentName} onChange={(e) => setStudentName(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="country">البلد</Label>
-              <Input id="country" value={country} onChange={(e) => setCountry(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="text">نص الرأي</Label>
-              <Textarea id="text" value={testimonialText} onChange={(e) => setTestimonialText(e.target.value)} />
-            </div>
-             <div className="space-y-2">
-              <Label>صورة الطالب (اختياري)</Label>
-              <div className="flex items-center gap-4">
-                <Input type="file" accept="image/*" onChange={handleFileChange} className="flex-1" />
-                <Button onClick={handleImageUpload} disabled={!selectedFile || isUploading}>
-                  {isUploading ? "جاري الرفع..." : "رفع الصورة"}
-                </Button>
-              </div>
-              {imageUrl && (
-                <div className="mt-4">
-                  <p>معاينة الصورة:</p>
-                  <img src={imageUrl.startsWith('blob:') ? imageUrl : `${API_BASE_URL}${imageUrl}`} alt="Preview" className="w-24 h-24 rounded-full object-cover mt-2" />
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{editingItem?.id ? 'تعديل شهادة' : 'إضافة شهادة جديدة'}</DialogTitle>
+              <DialogDescription>
+                املأ تفاصيل الشهادة هنا. انقر على "حفظ" عند الانتهاء.
+              </DialogDescription>
+            </DialogHeader>
+            {editingItem && (
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="studentName">اسم الطالب</Label>
+                        <Input id="studentName" value={editingItem.studentName} onChange={(e) => setEditingItem({ ...editingItem, studentName: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="country">الدولة</Label>
+                        <Input id="country" value={editingItem.country} onChange={(e) => setEditingItem({ ...editingItem, country: e.target.value })} />
+                    </div>
                 </div>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">إلغاء</Button>
-            </DialogClose>
-            <Button onClick={handleSave}>حفظ</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                <div className="space-y-2">
+                  <Label htmlFor="testimonialText">نص الشهادة</Label>
+                  <Textarea id="testimonialText" value={editingItem.testimonialText} onChange={(e) => setEditingItem({ ...editingItem, testimonialText: e.target.value })} />
+                </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="order">الترتيب</Label>
+                        <Input id="order" type="number" value={editingItem.order} onChange={(e) => setEditingItem({ ...editingItem, order: parseInt(e.target.value, 10) || 0 })} />
+                    </div>
+                    <div className="flex items-end pb-2">
+                        <div className="flex items-center space-x-2 space-x-reverse pt-4">
+                            <Checkbox id="isActive" checked={editingItem.isActive} onCheckedChange={(checked) => setEditingItem({ ...editingItem, isActive: !!checked })} />
+                            <Label htmlFor="isActive">فعال</Label>
+                        </div>
+                    </div>
+                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="image">صورة الطالب (اختياري)</Label>
+                  <Input id="image" type="file" accept="image/*" onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.files ? e.target.files[0] : null })} />
+                  <p className="text-xs text-muted-foreground">اترك الحقل فارغاً للإبقاء على الصورة الحالية عند التعديل.</p>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <DialogClose asChild><Button variant="ghost">إلغاء</Button></DialogClose>
+              <Button onClick={handleFormSubmit} disabled={mutation.isPending}>
+                {mutation.isPending ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" /> جاري الحفظ...</> : 'حفظ'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
     </Card>
   );
-}
+};

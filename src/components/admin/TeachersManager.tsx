@@ -1,250 +1,257 @@
 
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { toast } from "@/components/ui/use-toast";
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Trash2, Edit, UserPlus } from 'lucide-react';
 
-// --- API Base URL ---
-const API_BASE_URL = "https://tibyanacademy.runasp.net";
-
-// Helper to get the auth token from localStorage
-const getAuthToken = () => localStorage.getItem("authToken");
-
+// --- Type Definitions ---
 interface Teacher {
   id: number;
   name: string;
   title: string;
+  gender: string;
   bio?: string;
   imageUrl?: string;
   order: number;
   isActive: boolean;
 }
 
-export function TeachersManager() {
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface TeacherFormData {
+  id?: number;
+  name: string;
+  title: string;
+  gender: string;
+  bio: string;
+  order: number;
+  isActive: boolean;
+  imageUrl?: File | null;
+}
+
+const API_BASE_URL = 'https://tibyanacademy.runasp.net/api/Teacher';
+const IMAGE_BASE_URL = 'https://tibyanacademy.runasp.net';
+
+// --- API Functions ---
+
+const fetchTeachers = async (): Promise<Teacher[]> => {
+  const response = await fetch(`${API_BASE_URL}/GetAllTeacher`);
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch teachers: ${errorText}`);
+  }
+  return response.json();
+};
+
+const createOrUpdateTeacher = async (formData: TeacherFormData) => {
+  const data = new FormData();
+  data.append('name', formData.name);
+  data.append('title', formData.title);
+  data.append('gender', formData.gender);
+  data.append('bio', formData.bio);
+  data.append('order', formData.order.toString());
+  data.append('isActive', formData.isActive.toString());
+  if (formData.imageUrl) {
+    data.append('ImageUrl', formData.imageUrl);
+  }
+
+  const url = formData.id 
+    ? `${API_BASE_URL}/UpdateTeacher?id=${formData.id}` 
+    : `${API_BASE_URL}/AddTeacher`;
+  
+  const method = formData.id ? 'PUT' : 'POST';
+
+  const response = await fetch(url, { method, body: data });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to ${formData.id ? 'update' : 'create'} teacher: ${errorText}`);
+  }
+  return response.text();
+};
+
+const deleteTeacher = async (id: number) => {
+  const response = await fetch(`${API_BASE_URL}/DeleteTeacher?id=${id}`, { method: 'DELETE' });
+  if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to delete teacher: ${errorText}`);
+  }
+  return response.text();
+};
+
+
+// --- Component ---
+
+export const TeachersManager = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+  const [editingTeacher, setEditingTeacher] = useState<Partial<TeacherFormData> | null>(null);
 
-  // Form State
-  const [name, setName] = useState("");
-  const [title, setTitle] = useState("");
-  const [bio, setBio] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const { data: teachers = [], isLoading, error } = useQuery<Teacher[], Error>({
+    queryKey: ['teachers'],
+    queryFn: fetchTeachers,
+  });
 
-  const fetchTeachers = async () => {
-    try {
-      setIsLoading(true);
-      const token = getAuthToken();
-      // Admin endpoint to get all teachers
-      const response = await axios.get<Teacher[]>(`${API_BASE_URL}/api/teachers/all`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setTeachers(response.data);
-    } catch (error) {
-      toast({ title: "خطأ", description: "فشل في جلب بيانات المعلمين. قد تكون جلسة الدخول انتهت.", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const mutation = useMutation({
+    mutationFn: createOrUpdateTeacher,
+    onSuccess: (successMessage) => {
+      toast({ title: "نجاح", description: successMessage || "تمت العملية بنجاح." });
+      queryClient.invalidateQueries({ queryKey: ['teachers'] });
+      setIsDialogOpen(false);
+      setEditingTeacher(null);
+    },
+    onError: (err) => {
+      toast({ title: "خطأ", description: err.message, variant: 'destructive' });
+    },
+  });
+  
+  const deleteMutation = useMutation({
+    mutationFn: deleteTeacher,
+    onSuccess: (successMessage) => {
+        toast({ title: "نجاح", description: successMessage || "تم الحذف بنجاح" });
+        queryClient.invalidateQueries({ queryKey: ['teachers'] });
+    },
+    onError: (err) => {
+        toast({ title: "خطأ", description: err.message, variant: 'destructive' });
+    },
+  });
 
-  useEffect(() => {
-    fetchTeachers();
-  }, []);
-
-  const resetForm = () => {
-    setName("");
-    setTitle("");
-    setBio("");
-    setImageUrl(null);
-    setSelectedFile(null);
-    setEditingTeacher(null);
-    setIsUploading(false);
-  };
-
-  const handleOpenDialogForNew = () => {
-    resetForm();
+  const openDialogForNew = () => {
+    setEditingTeacher({ name: '', title: '', gender: 'ذكر', bio: '', order: 0, isActive: true, imageUrl: null });
     setIsDialogOpen(true);
   };
 
-  const handleOpenDialogForEdit = (teacher: Teacher) => {
-    resetForm();
-    setEditingTeacher(teacher);
-    setName(teacher.name);
-    setTitle(teacher.title);
-    setBio(teacher.bio || "");
-    setImageUrl(teacher.imageUrl || null);
+  const openDialogForEdit = (teacher: Teacher) => {
+    setEditingTeacher({ ...teacher, imageUrl: null }); // Set imageUrl to null initially, user can upload a new one
     setIsDialogOpen(true);
   };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files?.[0]) {
-      setSelectedFile(event.target.files[0]);
-    }
-  };
-
-  const handleImageUpload = async () => {
-    if (!selectedFile) return;
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    const token = getAuthToken();
-
-    try {
-      const response = await axios.post<{ url: string }>(`${API_BASE_URL}/api/files/upload`, formData, {
-        headers: { 
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}` 
-        }
-      });
-      setImageUrl(response.data.url);
-      toast({ title: "تم بنجاح", description: "تم رفع الصورة بنجاح." });
-    } catch (error) {
-      toast({ title: "خطأ", description: "فشل في رفع الصورة.", variant: "destructive" });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    const token = getAuthToken();
-    const teacherData = { 
-      name, 
-      title, 
-      bio, 
-      imageUrl,
-      // Default values for fields not in the form yet
-      order: editingTeacher?.order || 0,
-      isActive: editingTeacher?.isActive === undefined ? true : editingTeacher.isActive
-    };
+  
+  const handleFormSubmit = () => {
+    if (!editingTeacher) return;
     
-    try {
-      if (editingTeacher) {
-        // Update existing teacher
-        await axios.put(`${API_BASE_URL}/api/teachers/${editingTeacher.id}`, { ...teacherData, id: editingTeacher.id }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        toast({ title: "تم بنجاح", description: "تم تحديث بيانات المعلم." });
-      } else {
-        // Add new teacher
-        await axios.post(`${API_BASE_URL}/api/teachers`, teacherData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        toast({ title: "تم بنجاح", description: "تمت إضافة المعلم بنجاح." });
-      }
-      fetchTeachers(); // Refresh the list
-      setIsDialogOpen(false); // Close dialog
-    } catch (error) {
-       toast({ title: "خطأ", description: "فشلت عملية الحفظ.", variant: "destructive" });
+    if (!editingTeacher.name || !editingTeacher.title || !editingTeacher.gender) {
+        toast({title: "بيانات ناقصة", description: "يرجى ملء جميع الحقول المطلوبة.", variant: "destructive"});
+        return;
     }
+
+    mutation.mutate(editingTeacher as TeacherFormData);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("هل أنت متأكد من رغبتك في حذف هذا المعلم؟")) return;
-    const token = getAuthToken();
-    try {
-      await axios.delete(`${API_BASE_URL}/api/teachers/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast({ title: "تم الحذف", description: "تم حذف المعلم بنجاح." });
-      fetchTeachers(); // Refresh the list
-    } catch (error) {
-      toast({ title: "خطأ", description: "فشل في حذف المعلم.", variant: "destructive" });
-    }
-  };
+  if (isLoading) return <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin"/></div>;
+  if (error) return <div className="text-red-500 p-4">خطأ في تحميل البيانات: {error.message}</div>;
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>إدارة المعلمين</CardTitle>
-        <Button onClick={handleOpenDialogForNew}>إضافة معلم جديد</Button>
+      <CardHeader className="flex-row items-center justify-between">
+        <div>
+            <CardTitle>إدارة المعلمين</CardTitle>
+            <CardDescription>إضافة وتعديل وحذف المعلمين في الأكاديمية.</CardDescription>
+        </div>
+        <Button onClick={openDialogForNew}><UserPlus className="ml-2 h-4 w-4"/> إضافة معلم</Button>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>الصورة</TableHead>
-              <TableHead>الاسم</TableHead>
-              <TableHead>اللقب</TableHead>
-              <TableHead>إجراءات</TableHead>
+              <TableHead className="text-right">الاسم</TableHead>
+              <TableHead className="text-right">اللقب</TableHead>
+              <TableHead className="text-right">الترتيب</TableHead>
+              <TableHead className="text-right">الحالة</TableHead>
+              <TableHead className="text-right">الإجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={4} className="text-center">جاري التحميل...</TableCell></TableRow>
-            ) : (
-              teachers.map((teacher) => (
-                <TableRow key={teacher.id}>
-                  <TableCell>
+            {teachers.map(teacher => (
+              <TableRow key={teacher.id}>
+                 <TableCell>
                     <img 
-                      src={teacher.imageUrl ? `${API_BASE_URL}${teacher.imageUrl}` : "/placeholder.svg"} 
-                      alt={teacher.name} 
-                      className="w-12 h-12 rounded-full object-cover" 
+                        src={teacher.imageUrl ? `${IMAGE_BASE_URL}${teacher.imageUrl}` : './placeholder.svg'}
+                        alt={teacher.name} 
+                        className="h-12 w-12 rounded-full object-cover" 
+                        onError={(e) => { e.currentTarget.src = './placeholder.svg'; }} // Fallback for broken links
                     />
-                  </TableCell>
-                  <TableCell>{teacher.name}</TableCell>
-                  <TableCell>{teacher.title}</TableCell>
-                  <TableCell className="space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => handleOpenDialogForEdit(teacher)}>تعديل</Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(teacher.id)}>حذف</Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+                </TableCell>
+                <TableCell className="text-right font-medium">{teacher.name}</TableCell>
+                <TableCell className="text-right">{teacher.title}</TableCell>
+                <TableCell className="text-right">{teacher.order}</TableCell>
+                <TableCell className="text-right">{teacher.isActive ? "فعال" : "غير فعال"}</TableCell>
+                <TableCell className="text-right space-x-2 space-x-reverse">
+                  <Button variant="outline" size="sm" onClick={() => openDialogForEdit(teacher)}><Edit className="h-4 w-4"/></Button>
+                  <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(teacher.id)} disabled={deleteMutation.isPending}><Trash2 className="h-4 w-4"/></Button>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
-      </CardContent>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingTeacher ? "تعديل بيانات معلم" : "إضافة معلم جديد"}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">اسم المعلم</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title">اللقب / التخصص</Label>
-              <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="bio">نبذة تعريفية</Label>
-              <Textarea id="bio" value={bio} onChange={(e) => setBio(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>صورة المعلم</Label>
-              <div className="flex items-center gap-4">
-                <Input type="file" accept="image/*" onChange={handleFileChange} className="flex-1" />
-                <Button onClick={handleImageUpload} disabled={!selectedFile || isUploading}>
-                  {isUploading ? "جاري الرفع..." : "رفع الصورة"}
-                </Button>
-              </div>
-              {imageUrl && (
-                <div className="mt-4">
-                  <p>معاينة الصورة:</p>
-                  <img src={imageUrl.startsWith('blob:') ? imageUrl : `${API_BASE_URL}${imageUrl}`} alt="Preview" className="w-24 h-24 rounded-full object-cover mt-2" />
-                </div>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">إلغاء</Button>
-            </DialogClose>
-            <Button onClick={handleSave}>حفظ</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>{editingTeacher?.id ? 'تعديل بيانات المعلم' : 'إضافة معلم جديد'}</DialogTitle>
+                    <DialogDescription>
+                        املأ تفاصيل المعلم هنا. انقر على "حفظ التغييرات" عند الانتهاء.
+                    </DialogDescription>
+                </DialogHeader>
+                {editingTeacher && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">الاسم</Label>
+                            <Input id="name" value={editingTeacher.name} onChange={(e) => setEditingTeacher({...editingTeacher, name: e.target.value})} />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="title">اللقب</Label>
+                            <Input id="title" value={editingTeacher.title} onChange={(e) => setEditingTeacher({...editingTeacher, title: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="gender">الجنس</Label>
+                             <Select dir="rtl" value={editingTeacher.gender} onValueChange={(value) => setEditingTeacher({...editingTeacher, gender: value})}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="اختر الجنس" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="ذكر">ذكر</SelectItem>
+                                    <SelectItem value="انثي">أنثى</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="order">الترتيب</Label>
+                            <Input id="order" type="number" value={editingTeacher.order} onChange={(e) => setEditingTeacher({...editingTeacher, order: parseInt(e.target.value, 10) || 0})} />
+                        </div>
+                        <div className="md:col-span-2 space-y-2">
+                            <Label htmlFor="bio">نبذة تعريفية</Label>
+                            <Textarea id="bio" value={editingTeacher.bio} onChange={(e) => setEditingTeacher({...editingTeacher, bio: e.target.value})} />
+                        </div>
+                         <div className="md:col-span-2 space-y-2">
+                            <Label htmlFor="image">صورة المعلم (اختياري)</Label>
+                            <Input id="image" type="file" accept="image/*" onChange={(e) => setEditingTeacher({...editingTeacher, imageUrl: e.target.files ? e.target.files[0] : null})} />
+                            <p className="text-xs text-muted-foreground">اترك الحقل فارغاً لاستخدام الصورة الافتراضية أو للإبقاء على الصورة الحالية عند التعديل.</p>
+                        </div>
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                             <Checkbox id="isActive" checked={editingTeacher.isActive} onCheckedChange={(checked) => setEditingTeacher({...editingTeacher, isActive: !!checked})} />
+                            <Label htmlFor="isActive">معلم فعال</Label>
+                        </div>
+                    </div>
+                )}
+                <DialogFooter>
+                    <DialogClose asChild><Button variant="ghost">إلغاء</Button></DialogClose>
+                    <Button onClick={handleFormSubmit} disabled={mutation.isPending}>
+                        {mutation.isPending ? <><Loader2 className="ml-2 h-4 w-4 animate-spin"/> جاري الحفظ...</> : 'حفظ التغييرات'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+      </CardContent>
     </Card>
   );
-}
+};

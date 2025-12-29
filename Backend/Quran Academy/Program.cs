@@ -99,7 +99,7 @@ namespace Quran_Academy
             var app = builder.Build();
 
 
-            app.UseCors("MyPolicy");
+            
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -109,6 +109,8 @@ namespace Quran_Academy
             }
             app.UseStaticFiles();
             app.UseHttpsRedirection();
+
+            app.UseCors("MyPolicy");
 
             app.UseAuthentication();
             app.UseAuthorization();

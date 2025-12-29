@@ -1,104 +1,161 @@
 
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from '@/components/ui/use-toast';
-import { Trash2, RefreshCw } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Trash2, CheckCircle } from 'lucide-react';
 
-const API_BASE_URL = "https://tibyanacademy.runasp.net";
-
+// Define the shape of an Application
 interface Application {
   id: number;
-  applicantName: string;
-  applicantEmail: string;
-  applicantPhone: string;
-  userType: string;
-  course: string;
+  name: string;
+  age: number;
+  phone: string;
+  country: string;
+  gender: 'male' | 'female';
+  packageId: number;
   notes: string;
-  submissionDate: string;
+  status: string;
+  createdAt: string;
 }
 
+// API function to fetch applications
+const fetchApplications = async (): Promise<Application[]> => {
+  const token = localStorage.getItem('token');
+  const response = await fetch('https://tibyanacademy.runasp.net/api/Applications/GetApplications', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch applications');
+  }
+  return response.json();
+};
+
+// API function to update application status
+const updateApplicationStatus = async (id: number) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`https://tibyanacademy.runasp.net/api/Applications/UpdateApplicationStatus?id=${id}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update application status');
+  }
+  return response.text();
+};
+
+// API function to delete an application
+const deleteApplication = async (id: number) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`https://tibyanacademy.runasp.net/api/Applications/DeleteApplication?id=${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to delete application');
+  }
+  return response.text();
+};
+
 export const ApplicationsViewer = () => {
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  const fetchApplications = async () => {
-    setIsLoading(true);
-    const token = localStorage.getItem('authToken');
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/applications`, config);
-      // Sort by most recent
-      setApplications(response.data.sort((a: Application, b: Application) => new Date(b.submissionDate).getTime() - new Date(a.submissionDate).getTime()));
-    } catch (error) {
-      toast({ title: "فشل جلب طلبات التسجيل", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
+  const { data: applications, isLoading, error } = useQuery<Application[], Error>({
+    queryKey: ['applications'],
+    queryFn: fetchApplications,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateApplicationStatus,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast({ title: 'Success', description: 'Application status updated.' });
+    },
+    onError: (err) => {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchApplications();
-  }, []);
-
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا الطلب؟ سيتم حذفه نهائياً.")) return;
-    
-    const token = localStorage.getItem('authToken');
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-
-    try {
-      await axios.delete(`${API_BASE_URL}/api/applications/${id}`, config);
-      toast({ title: "تم حذف الطلب بنجاح" });
-      fetchApplications();
-    } catch (error) {
-      toast({ title: "فشل حذف الطلب", variant: "destructive" });
+  const deleteMutation = useMutation({
+    mutationFn: deleteApplication,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['applications'] });
+      toast({ title: 'Success', description: 'Application deleted.' });
+    },
+    onError: (err) => {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
-  };
+  });
+
+  if (isLoading) return <div className="flex justify-center items-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  if (error) return <div className="text-red-500 p-4">Error: {error.message}</div>;
 
   return (
-    <Card dir="rtl">
+    <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle>طلبات التسجيل الواردة</CardTitle>
-            <CardDescription>عرض جميع طلبات التسجيل المقدمة من الزوار.</CardDescription>
-          </div>
-          <Button onClick={fetchApplications} variant="outline" size="sm" disabled={isLoading}>
-            <RefreshCw className={`ml-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} /> تحديث
-          </Button>
-        </div>
+        <CardTitle>طلبات التسجيل</CardTitle>
+        <CardDescription>عرض وإدارة جميع طلبات التسجيل المقدمة.</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>الاسم</TableHead>
-              <TableHead>البريد الإلكتروني</TableHead>
-              <TableHead>الدورة المطلوبة</TableHead>
-              <TableHead>تاريخ التقديم</TableHead>
-              <TableHead>إجراءات</TableHead>
+              <TableHead className="text-right">الاسم</TableHead>
+              <TableHead className="text-right">العمر</TableHead>
+              <TableHead className="text-right">الدولة</TableHead>
+              <TableHead className="text-right">رقم الهاتف</TableHead>
+              <TableHead className="text-right">الحالة</TableHead>
+              <TableHead className="text-right">الإجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center">جاري التحميل...</TableCell></TableRow>
-            ) : applications.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center h-24">لا توجد طلبات تسجيل حالياً.</TableCell></TableRow>
-            ) : (
-              applications.map(app => (
+            {applications && applications.length > 0 ? (
+              applications.map((app) => (
                 <TableRow key={app.id}>
-                  <TableCell className="font-medium">{app.applicantName}</TableCell>
-                  <TableCell>{app.applicantEmail}</TableCell>
-                  <TableCell>{app.course}</TableCell>
-                  <TableCell>{new Date(app.submissionDate).toLocaleDateString('ar-EG')}</TableCell>
-                  <TableCell>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(app.id)}><Trash2 className="h-4 w-4" /></Button>
+                  <TableCell className="text-right">{app.name}</TableCell>
+                  <TableCell className="text-right">{app.age}</TableCell>
+                  <TableCell className="text-right">{app.country}</TableCell>
+                  <TableCell className="text-right" dir="ltr">{app.phone}</TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant={app.status === 'PENDING' ? 'destructive' : 'secondary'}>
+                      {app.status === 'PENDING' ? 'قيد الانتظار' : 'تم التواصل'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      disabled={app.status === 'CONTACTED' || updateMutation.isPending}
+                      onClick={() => updateMutation.mutate(app.id)}
+                    >
+                      <CheckCircle className="h-4 w-4 ml-2"/>
+                      تم التواصل
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="destructive"
+                      disabled={deleteMutation.isPending}
+                      onClick={() => deleteMutation.mutate(app.id)}
+                    >
+                      <Trash2 className="h-4 w-4 ml-2"/>
+                      حذف
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center">لا توجد طلبات تسجيل حالياً.</TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>

@@ -1,75 +1,107 @@
 
 import { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from '@/components/ui/use-toast';
-
-const API_BASE_URL = 'https://tibyanacademy.runasp.net';
+import { useToast } from '@/components/ui/use-toast';
+import { motion } from 'framer-motion';
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+
+    // FINAL FIX: Use the HTTPS endpoint to prevent mixed content errors.
+    const targetUrl = 'https://tibyanacademy.runasp.net/api/Auth/login';
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
-        email,
-        password,
+      const response = await fetch(targetUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (response.data.token) {
-        // Store the token in localStorage
-        localStorage.setItem('authToken', response.data.token);
+      const responseBody = await response.text();
 
-        toast({ title: 'تم تسجيل الدخول بنجاح', description: 'يتم الآن توجيهك إلى لوحة التحكم.' });
-        
-        // Redirect to the admin dashboard
-        navigate('/admin');
+      if (response.ok) {
+        const data = JSON.parse(responseBody);
+        const token = data.token;
+
+        if (token && typeof token === 'string' && token.trim().length > 0) {
+          localStorage.setItem('token', token.trim());
+          toast({
+            title: 'تم تسجيل الدخول بنجاح',
+            description: 'أهلاً بك مجدداً!',
+          });
+          // ROUTING FIX: Redirect to the correct admin dashboard path.
+          navigate('/admin');
+        } else {
+          console.error('Login successful, but no valid token was found.', { responseBody });
+          toast({
+            title: 'خطأ في استجابة الخادم',
+            description: 'لم يتم العثور على رمز مميز صالح في الاستجابة.',
+            variant: 'destructive',
+          });
+        }
       } else {
-        throw new Error('No token received');
+        const { status } = response;
+        const errorDetails = responseBody;
+
+        console.error(`Login failed with status ${status}:`, errorDetails);
+        toast({
+          title: `فشل تسجيل الدخول (Status: ${status})`,
+          description: errorDetails || 'يرجى التحقق من بيانات الاعتماد الخاصة بك.',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('A network or other unexpected error occurred:', error);
+      let description = 'حدث خطأ غير متوقع.';
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        description = 'فشل الاتصال بالخادم. هذا غالباً بسبب خطأ CORS أو مشكلة في الشبكة.';
+      }
       toast({
-        title: 'فشل تسجيل الدخول',
-        description: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
+        title: 'خطأ في الشبكة أو خطأ غير متوقع',
+        description: description,
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
-    <div dir="rtl" className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-sm">
-        <form onSubmit={handleLogin}>
-          <CardHeader>
-            <CardTitle className="text-2xl">تسجيل الدخول</CardTitle>
-            <CardDescription>أدخل بياناتك للوصول إلى لوحة التحكم.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <div className="grid gap-2">
+    <motion.div
+      className="container py-20 flex items-center justify-center"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl">تسجيل الدخول</CardTitle>
+          <CardDescription>أدخل بريدك الإلكتروني وكلمة المرور للوصول إلى حسابك.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
               <Label htmlFor="email">البريد الإلكتروني</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@example.com"
+                placeholder="email@example.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="grid gap-2">
+            <div className="space-y-2">
               <Label htmlFor="password">كلمة المرور</Label>
               <Input
                 id="password"
@@ -79,15 +111,13 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-          </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
+            <Button type="submit" className="w-full">
+              تسجيل الدخول
             </Button>
-          </CardFooter>
-        </form>
+          </form>
+        </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 };
 

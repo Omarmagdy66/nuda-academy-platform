@@ -1,178 +1,249 @@
 
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { toast } from '@/components/ui/use-toast';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Trash2, Edit, PlusCircle } from 'lucide-react';
 
-const API_BASE_URL = "https://tibyanacademy.runasp.net";
+// Zod schema for package form validation (in Arabic)
+const packageSchema = z.object({
+  name: z.string().min(1, "اسم الباقة مطلوب"),
+  price: z.coerce.number().min(0, "يجب أن يكون السعر رقمًا موجبًا"),
+  features: z.string().min(1, "المميزات مطلوبة (مفصولة بفاصلة)"),
+  isActive: z.boolean(),
+});
+type PackageFormValues = z.infer<typeof packageSchema>;
 
-interface Package {
+interface Package extends PackageFormValues {
   id: number;
-  name: string;
-  description: string;
-  price: number;
-  features: string; // Comma-separated
-  isMostPopular: boolean;
-  isActive: boolean;
 }
 
-export const PackagesManager = () => {
-  const [packages, setPackages] = useState<Package[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentPackage, setCurrentPackage] = useState<Partial<Package> | null>(null);
+// API Functions with improved error handling and features transformation
+const apiBaseUrl = 'https://tibyanacademy.runasp.net/api/Packages';
 
-  const fetchPackages = async () => {
-    setIsLoading(true);
+const handleApiResponse = async (response: Response) => {
+  if (!response.ok) {
+    const errorText = await response.text();
+    // Try to parse the error text as JSON for a more detailed message
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/packages/all`);
-      setPackages(response.data);
-    } catch (error) {
-      toast({ title: "فشل جلب الباقات", variant: "destructive" });
-    } finally {
-      setIsLoading(false);
+        const errorJson = JSON.parse(errorText);
+        // Extract validation errors if they exist
+        if (errorJson.errors) {
+            const errorMessages = Object.values(errorJson.errors).flat().join(' \n');
+            throw new Error(errorMessages);
+        }
+        throw new Error(errorJson.title || errorText);
+    } catch (e) {
+        // If parsing fails, use the raw text
+        throw new Error(errorText || `فشل الطلب مع الحالة: ${response.status}`);
+    }
+  }
+  return response.text();
+};
+
+const fetchPackages = async (): Promise<Package[]> => {
+  const res = await fetch(`${apiBaseUrl}/GetAllPackages`);
+  if (!res.ok) throw new Error('فشل في جلب الباقات');
+  const packages = await res.json();
+  // The backend sends features as an array, but the form needs a string.
+  return packages.map((pkg: any) => ({ ...pkg, features: Array.isArray(pkg.features) ? pkg.features.join(', ') : pkg.features }));
+};
+
+const createPackage = async (newPackage: PackageFormValues) => {
+  const token = localStorage.getItem('token');
+  const payload = {
+    ...newPackage,
+    features: newPackage.features.split(',').map(f => f.trim()).filter(f => f), // Convert string to string array
+  };
+  const res = await fetch(`${apiBaseUrl}/CreatePackage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  return handleApiResponse(res);
+};
+
+const updatePackage = async ({ id, ...updatedPackage }: Package) => {
+  const token = localStorage.getItem('token');
+    const payload = {
+    ...updatedPackage,
+    features: updatedPackage.features.split(',').map(f => f.trim()).filter(f => f), // Convert string to string array
+  };
+  const res = await fetch(`${apiBaseUrl}/UpdatePackage?id=${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+  return handleApiResponse(res);
+};
+
+const deletePackage = async (id: number) => {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${apiBaseUrl}/DeletePackage?id=${id}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  return handleApiResponse(res);
+};
+
+
+// Component for the form (in Arabic)
+const PackageForm = ({ pkg, onFinished }: { pkg?: Package, onFinished: () => void }) => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const form = useForm<PackageFormValues>({
+    resolver: zodResolver(packageSchema),
+    defaultValues: pkg ? { ...pkg } : { name: '', price: 0, features: '', isActive: true },
+  });
+
+  const onMutationSuccess = (message: string) => {
+    queryClient.invalidateQueries({ queryKey: ['packages'] });
+    toast({ title: 'نجاح', description: message });
+    onFinished();
+  };
+
+  const onMutationError = (error: Error) => {
+    toast({
+      title: "حدث خطأ",
+      description: error.message || "لم نتمكن من حفظ التغييرات. الرجاء المحاولة مرة أخرى.",
+      variant: "destructive",
+    });
+  };
+  
+  const createMutation = useMutation({ 
+    mutationFn: createPackage, 
+    onSuccess: () => onMutationSuccess('تم إنشاء الباقة بنجاح'),
+    onError: onMutationError,
+  });
+  const updateMutation = useMutation({ 
+    mutationFn: updatePackage, 
+    onSuccess: () => onMutationSuccess('تم تحديث الباقة بنجاح'),
+    onError: onMutationError,
+  });
+
+
+  const onSubmit = (values: PackageFormValues) => {
+    if (pkg) {
+      updateMutation.mutate({ id: pkg.id, ...values });
+    } else {
+      createMutation.mutate(values);
     }
   };
 
-  useEffect(() => {
-    fetchPackages();
-  }, []);
-
-  const handleSave = async () => {
-    if (!currentPackage) return;
-
-    const token = localStorage.getItem('authToken');
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    
-    const payload = { ...currentPackage, price: Number(currentPackage.price) };
-
-    try {
-      if (currentPackage.id) {
-        // Update existing package
-        await axios.put(`${API_BASE_URL}/api/packages/${currentPackage.id}`, payload, config);
-        toast({ title: "تم تحديث الباقة بنجاح" });
-      } else {
-        // Create new package
-        await axios.post(`${API_BASE_URL}/api/packages`, payload, config);
-        toast({ title: "تم إضافة الباقة بنجاح" });
-      }
-      fetchPackages();
-      setIsDialogOpen(false);
-      setCurrentPackage(null);
-    } catch (error) {
-      toast({ title: "حدث خطأ أثناء الحفظ", variant: "destructive" });
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("هل أنت متأكد من رغبتك في حذف هذه الباقة؟")) return;
-    
-    const token = localStorage.getItem('authToken');
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-
-    try {
-      await axios.delete(`${API_BASE_URL}/api/packages/${id}`, config);
-      toast({ title: "تم حذف الباقة بنجاح" });
-      fetchPackages();
-    } catch (error) {
-      toast({ title: "فشل حذف الباقة", variant: "destructive" });
-    }
-  };
-
-  const openDialog = (pkg: Partial<Package> | null = null) => {
-    setCurrentPackage(pkg ? { ...pkg } : { name: '', description: '', price: 0, features: '', isMostPopular: false, isActive: true });
-    setIsDialogOpen(true);
-  };
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Card dir="rtl">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <div>
-            <CardTitle>إدارة الباقات</CardTitle>
-            <CardDescription>إضافة، تعديل، وحذف باقات الأسعار.</CardDescription>
-          </div>
-          <Button onClick={() => openDialog()}>
-            <PlusCircle className="ml-2 h-4 w-4" /> إضافة باقة
-          </Button>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 text-right">
+        <FormField control={form.control} name="name" render={({ field }) => <FormItem><FormLabel>اسم الباقة</FormLabel><FormControl><Input placeholder="مثال: الباقة الذهبية" {...field} /></FormControl><FormMessage /></FormItem>} />
+        <FormField control={form.control} name="price" render={({ field }) => <FormItem><FormLabel>السعر (بالريال السعودي)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
+        <FormField control={form.control} name="features" render={({ field }) => <FormItem><FormLabel>مميزات الباقة</FormLabel><FormControl><Input placeholder="اكتب المميزات مفصولة بفاصلة، مثال: 4 جلسات, متابعة" {...field} /></FormControl><FormMessage /></FormItem>} />
+        <FormField
+          control={form.control}
+          name="isActive"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel>تفعيل الباقة</FormLabel>
+                <FormDescription>
+                  عند تفعيلها، ستظهر الباقة في صفحات الموقع للعملاء.
+                </FormDescription>
+              </div>
+              {/* Fix for RTL Switch issue */}
+              <FormControl dir="ltr">
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" /> جاري الحفظ...</> : 'حفظ'}</Button>
+      </form>
+    </Form>
+  );
+};
+
+// Main component to manage packages (in Arabic)
+export const PackagesManager = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<Package | undefined>(undefined);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: packages, isLoading, error } = useQuery<Package[], Error>({ queryKey: ['packages'], queryFn: fetchPackages });
+  const deleteMutation = useMutation({ 
+    mutationFn: deletePackage, 
+    onSuccess: () => { 
+      queryClient.invalidateQueries({ queryKey: ['packages'] });
+      toast({title: 'نجاح', description: 'تم حذف الباقة بنجاح'});
+    }, 
+    onError: (err: Error) => {
+      toast({title: 'خطأ', description: err.message, variant: 'destructive'});
+    }
+  });
+
+  const openDialog = (pkg?: Package) => {
+    setSelectedPackage(pkg);
+    setIsDialogOpen(true);
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between">
+        <div>
+          <CardTitle>إدارة الباقات</CardTitle>
+          <CardDescription>إضافة وتعديل وحذف باقات الاشتراك.</CardDescription>
         </div>
+        <Button onClick={() => openDialog()}><PlusCircle className="h-4 w-4 ml-2"/> إضافة باقة</Button>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>اسم الباقة</TableHead>
-              <TableHead>السعر (ر.س)</TableHead>
-              <TableHead>الحالة</TableHead>
-              <TableHead>الأكثر شيوعاً</TableHead>
-              <TableHead>إجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center">جاري التحميل...</TableCell></TableRow>
-            ) : (
-              packages.map(pkg => (
-                <TableRow key={pkg.id}>
-                  <TableCell className="font-medium">{pkg.name}</TableCell>
-                  <TableCell>{pkg.price}</TableCell>
-                  <TableCell>{pkg.isActive ? "نشط" : "غير نشط"}</TableCell>
-                  <TableCell>{pkg.isMostPopular ? "نعم" : "لا"}</TableCell>
-                  <TableCell className="space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => openDialog(pkg)}><Edit className="h-4 w-4" /></Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(pkg.id)}><Trash2 className="h-4 w-4" /></Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+        {isLoading && <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}
+        {error && <p className="text-red-500 text-center p-4">{error.message}</p>}
+        {packages && (
+            <Table dir="rtl">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-right">اسم الباقة</TableHead>
+                    <TableHead className="text-right">السعر</TableHead>
+                    <TableHead className="text-right">الحالة</TableHead>
+                    <TableHead className="text-right">الإجراءات</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {packages.map(pkg => (
+                        <TableRow key={pkg.id}>
+                            <TableCell className="font-medium">{pkg.name}</TableCell>
+                            <TableCell>{pkg.price} ر.س</TableCell>
+                            <TableCell>{pkg.isActive ? 'مفعلة' : 'معطلة'}</TableCell>
+                            <TableCell className="space-x-2 whitespace-nowrap">
+                                <Button variant="outline" size="sm" onClick={() => openDialog(pkg)}><Edit className="h-4 w-4 ml-1" />تعديل</Button>
+                                <Button variant="destructive" size="sm" onClick={() => deleteMutation.mutate(pkg.id)} disabled={deleteMutation.isPending}><Trash2 className="h-4 w-4 ml-1" />حذف</Button>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        )}
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-[525px]" dir="rtl">
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>{currentPackage?.id ? 'تعديل باقة' : 'إضافة باقة جديدة'}</DialogTitle>
+              <DialogTitle className="text-right">{selectedPackage ? 'تعديل باقة' : 'إنشاء باقة جديدة'}</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">الاسم</Label>
-                <Input id="name" value={currentPackage?.name || ''} onChange={e => setCurrentPackage(p => ({ ...p, name: e.target.value }))} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">الوصف</Label>
-                <Input id="description" value={currentPackage?.description || ''} onChange={e => setCurrentPackage(p => ({ ...p, description: e.target.value }))} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="price" className="text-right">السعر</Label>
-                <Input id="price" type="number" value={currentPackage?.price || 0} onChange={e => setCurrentPackage(p => ({ ...p, price: Number(e.target.value) }))} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="features" className="text-right">الميزات</Label>
-                <Textarea id="features" value={currentPackage?.features || ''} onChange={e => setCurrentPackage(p => ({ ...p, features: e.target.value }))} className="col-span-3" placeholder="افصل بين الميزات بفاصلة (,)" />
-              </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
-                 <Checkbox id="isMostPopular" checked={currentPackage?.isMostPopular || false} onCheckedChange={checked => setCurrentPackage(p => ({ ...p, isMostPopular: !!checked }))} />
-                 <Label htmlFor="isMostPopular">تعليم كـ "الأكثر شيوعاً"</Label>
-              </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
-                 <Checkbox id="isActive" checked={currentPackage?.isActive || false} onCheckedChange={checked => setCurrentPackage(p => ({ ...p, isActive: !!checked }))} />
-                 <Label htmlFor="isActive">تفعيل الباقة (ستظهر في الموقع)</Label>
-              </div>
+            <div className="py-4">
+              <PackageForm pkg={selectedPackage} onFinished={() => setIsDialogOpen(false)} />
             </div>
-            <DialogFooter>
-                <DialogClose asChild>
-                    <Button type="button" variant="secondary">إلغاء</Button>
-                </DialogClose>
-                <Button onClick={handleSave}>حفظ</Button>
-            </DialogFooter>
           </DialogContent>
         </Dialog>
       </CardContent>

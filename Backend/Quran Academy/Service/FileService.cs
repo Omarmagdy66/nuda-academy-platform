@@ -1,11 +1,13 @@
-﻿using Services;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Service;
 
-
 public class FileService : IFileService
 {
-    // نحتاج IWebHostEnvironment هنا أيضاً
     private readonly IWebHostEnvironment _env;
 
     public FileService(IWebHostEnvironment env)
@@ -13,37 +15,62 @@ public class FileService : IFileService
         _env = env;
     }
 
-    public async Task<string> UploadFileAsync(IFormFile file)
+    public async Task<string> SaveFileAsync(IFormFile file, string subfolder)
     {
         if (file == null || file.Length == 0)
         {
-            // من الأفضل رمي استثناء هنا ليتم معالجته في الكنترولر
-            throw new ArgumentException("No file uploaded.");
+            return null;
         }
 
-        // 1. تحديد مسار المجلد (مثل: wwwroot/images)
-        var uploadsFolder = Path.Combine(_env.WebRootPath, "Image");
+        // Define the main directory where files will be stored (e.g., wwwroot/Image)
+        var uploadsRootFolder = Path.Combine(_env.WebRootPath, "Image");
+        var targetFolder = Path.Combine(uploadsRootFolder, subfolder);
 
-        // 2. التأكد من وجود المجلد
-        if (!Directory.Exists(uploadsFolder))
+        // Ensure the target subfolder exists
+        if (!Directory.Exists(targetFolder))
         {
-            Directory.CreateDirectory(uploadsFolder);
+            Directory.CreateDirectory(targetFolder);
         }
 
-        // 3. إنشاء اسم فريد للملف
-        var uniqueFileName = $"{Guid.NewGuid().ToString()}_{file.FileName}";
-        var filePath = Path.Combine(uploadsFolder, file.FileName);
+        // Create a unique filename to prevent overwriting and conflicts
+        var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+        var filePath = Path.Combine(targetFolder, uniqueFileName);
 
-        // 4. حفظ الملف
+        // Save the file to the server
         using (var stream = new FileStream(filePath, FileMode.Create))
         {
             await file.CopyToAsync(stream);
         }
 
-        // 5. إرجاع الرابط العام
-        var publicUrl = $"/Image/{uniqueFileName}";
-        return publicUrl;
+        // Return the relative path to be stored in the database
+        // e.g., /Image/Testimonials/uniquefile.jpg
+        var relativePath = Path.Combine("/Image", subfolder, uniqueFileName).Replace('\\', '/');
+        return relativePath;
+    }
+
+    public void DeleteFile(string relativePath)
+    {
+        if (string.IsNullOrEmpty(relativePath))
+        {
+            return;
+        }
+
+        // Convert the relative web path to a full physical path
+        // e.g., /Image/Testimonials/file.jpg -> C:\project\wwwroot\Image\Testimonials\file.jpg
+        var physicalPath = Path.Combine(_env.WebRootPath, relativePath.TrimStart('/').Replace('/', '\\'));
+
+        // Check if the file exists and delete it
+        if (File.Exists(physicalPath))
+        {
+            try
+            {
+                File.Delete(physicalPath);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception (optional)
+                Console.WriteLine($"Error deleting file: {physicalPath}. Error: {ex.Message}");
+            }
+        }
     }
 }
-
-

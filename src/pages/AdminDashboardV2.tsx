@@ -18,7 +18,6 @@ import {
   BarChart, 
   ClipboardList, 
   BookOpen, 
-  FileText, 
   Settings
 } from "lucide-react"
 
@@ -26,7 +25,6 @@ import {
 import { TeachersManager } from "@/components/admin/TeachersManager";
 import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import { PackagesManager } from "@/components/admin/PackagesManager";
-import { FaqsManager } from "@/components/admin/FaqsManager"; 
 import { ApplicationsViewer } from "@/components/admin/ApplicationsViewer";
 import { SiteContentEditor } from "@/components/admin/SiteContentEditor";
 
@@ -37,13 +35,12 @@ const AdminDashboardV2 = () => {
         <h2 className="text-3xl font-bold tracking-tight">لوحة التحكم</h2>
       </div>
       <Tabs defaultValue="overview" className="space-y-4" dir="rtl">
-        <TabsList className="grid w-full grid-cols-2 h-auto md:grid-cols-4 lg:grid-cols-7">
+        <TabsList className="grid w-full grid-cols-2 h-auto md:grid-cols-3 lg:grid-cols-6">
           <TabsTrigger value="overview"><BarChart className="ml-2 h-4 w-4"/>نظرة عامة</TabsTrigger>
           <TabsTrigger value="applications"><ClipboardList className="ml-2 h-4 w-4"/>طلبات التسجيل</TabsTrigger>
           <TabsTrigger value="teachers"><Users className="ml-2 h-4 w-4"/>المعلمون</TabsTrigger>
           <TabsTrigger value="testimonials"><BookOpen className="ml-2 h-4 w-4"/>آراء الطلاب</TabsTrigger>
           <TabsTrigger value="packages"><DollarSign className="ml-2 h-4 w-4"/>الباقات</TabsTrigger>
-          <TabsTrigger value="faqs"><FileText className="ml-2 h-4 w-4"/>الأسئلة الشائعة</TabsTrigger>
           <TabsTrigger value="content"><Settings className="ml-2 h-4 w-4"/>محتوى الموقع</TabsTrigger>
         </TabsList>
         
@@ -80,11 +77,6 @@ const AdminDashboardV2 = () => {
           <PackagesManager />
         </TabsContent>
         
-        {/* FAQs Tab */}
-        <TabsContent value="faqs" className="space-y-4">
-           <FaqsManager />
-        </TabsContent>
-
         {/* Content Editor Tab */}
         <TabsContent value="content" className="space-y-4">
            <SiteContentEditor />

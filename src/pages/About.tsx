@@ -1,18 +1,16 @@
 
-import { useState, useEffect } from 'react';
-import axios from 'axios';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Target, Eye, ShieldCheck, Heart, Users } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Target, Eye, BookHeart, Users, CheckCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
-// --- API Base URL ---
-const API_BASE_URL = "https://tibyanacademy.runasp.net";
+const API_BASE_URL = "https://tibyanacademy.runasp.net/api";
+const IMAGE_BASE_URL = "https://tibyanacademy.runasp.net";
 
-interface SiteContent {
-  [key: string]: string;
-}
-
+// --- Type Definition ---
 interface Teacher {
   id: number;
   name: string;
@@ -22,239 +20,224 @@ interface Teacher {
   isActive: boolean;
 }
 
-const About = () => {
-  const [content, setContent] = useState<SiteContent>({});
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+// --- API Fetching Function ---
+const fetchActiveTeachers = async (): Promise<Teacher[]> => {
+  const response = await fetch(`${API_BASE_URL}/Teacher/GetActiveTeachers`);
+  if (!response.ok) throw new Error("Failed to fetch teachers.");
+  return response.json();
+};
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        // Fetch site content and active teachers in parallel
-        const [contentRes, teachersRes] = await Promise.all([
-          axios.get<SiteContent>(`${API_BASE_URL}/api/sitecontent`),
-          axios.get<Teacher[]>(`${API_BASE_URL}/api/teachers`)
-        ]);
-        setContent(contentRes.data);
-        setTeachers(teachersRes.data);
-      } catch (error) {
-        console.error("Failed to fetch about page data:", error);
-        // You might want to set some error state here
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
 
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8 } }
-  };
+const fadeInVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: 'easeOut',
+      staggerChildren: 0.2
+    }
+  }
+};
 
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.3 },
-    },
-  };
+// --- Teachers Section Component (FIXED) ---
+const TeachersSection = () => {
+  const { data: teachers, isLoading, error } = useQuery<Teacher[], Error>({
+    queryKey: ['activeTeachersAboutPage'], // Unique query key
+    queryFn: fetchActiveTeachers,
+  });
 
+  return (
+    <motion.section 
+      className="py-16 bg-muted/30 dark:bg-gray-900/40"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.2 }}
+      variants={fadeInVariants}
+    >
+      <div className="container">
+        <motion.div className="text-center mb-12" variants={fadeInVariants}>
+          <h2 className="text-3xl md:text-4xl font-bold">فريقنا من المعلمين المهرة</h2>
+          <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
+            نفخر بوجود نخبة من المعلمين والمعلمات المجازين وذوي الخبرة الذين يكرسون وقتهم لخدمة كتاب الله.
+          </p>
+        </motion.div>
+
+        {isLoading && (
+          <div className="flex justify-center items-center h-40">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        )}
+
+        {error && (
+          <div className="text-center text-red-500">
+            <p>عفواً، لم نتمكن من تحميل قائمة المعلمين حالياً.</p>
+          </div>
+        )}
+
+        {teachers && teachers.length > 0 && (
+          <motion.div 
+            className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+            variants={fadeInVariants}
+          >
+            {teachers.map(teacher => (
+              <motion.div key={teacher.id} variants={fadeInVariants}>
+                <Card className="text-center h-full hover:shadow-lg transition-shadow border-0">
+                  <CardContent className="p-6 flex flex-col items-center">
+                    <img 
+                      src={`${IMAGE_BASE_URL}${teacher.imageUrl}`}
+                      alt={teacher.name}
+                      className="w-28 h-28 rounded-full mx-auto mb-4 object-cover border-4 border-white dark:border-gray-800 shadow-md"
+                      onError={(e) => { e.currentTarget.src = './placeholder.svg'; }}
+                    />
+                    <h3 className="text-xl font-semibold mb-1">{teacher.name}</h3>
+                    <p className="text-primary font-medium mb-2">{teacher.title}</p>
+                    <p className="text-muted-foreground text-sm">{teacher.bio}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+
+        {teachers && teachers.length === 0 && !isLoading && (
+            <div className="text-center text-muted-foreground">
+                <p>لم يتم إضافة معلمين فعالين بعد.</p>
+            </div>
+        )}
+
+      </div>
+    </motion.section>
+  );
+}
+
+
+const About = () => { // Renamed component to About
   return (
     <div className="bg-background">
       {/* Hero Section */}
       <motion.section
-        className="py-20 md:py-32 bg-gradient-to-br from-primary/10 via-background to-secondary/10"
+        className="py-20 md:py-28 text-center bg-gradient-to-b from-primary/5 via-transparent to-transparent"
         initial="hidden"
         animate="visible"
-        variants={fadeIn}
+        variants={fadeInVariants}
       >
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-gradient mb-4">
-            من نحن
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-            {isLoading ? <Skeleton className="h-6 w-3/4 mx-auto" /> : (content.about_us_headline || 'في أكاديمية تبيان، نجمع بين أصالة التعليم القرآني ومرونة التقنية الحديثة لنوفر لكم تجربة تعليمية فريدة.')}
-          </p>
+        <div className="container">
+          <motion.h1 
+            className="text-4xl md:text-5xl font-bold text-gradient mb-4"
+            variants={fadeInVariants}
+          >
+            عن أكاديمية سندُ القرَّاء
+          </motion.h1>
+          <motion.p 
+            className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto"
+            variants={fadeInVariants}
+          >
+            منصة تعليمية رائدة متخصصة في تحفيظ القرآن الكريم وعلومه عن بعد، بإشراف نخبة من المعلمين المهرة والمجازين.
+          </motion.p>
         </div>
       </motion.section>
 
-      {/* Our Story Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <motion.div
-            className="text-center mb-16"
-            initial="hidden"
-            whileInView="visible"
-            variants={fadeIn}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl font-bold mb-3">رسالتنا ورؤيتنا</h2>
-          </motion.div>
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ x: -50, opacity: 0 }}
-              whileInView={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.7 }}
-              viewport={{ once: true }}
-            >
-              <img
-                src="/images/about-us-placeholder.jpg" // A more relevant placeholder
-                alt="Quran Learning"
-                className="rounded-lg shadow-lg w-full h-auto object-cover aspect-video"
-              />
-            </motion.div>
-            <motion.div
-              className="space-y-6"
-              initial="hidden"
-              whileInView="visible"
-              variants={staggerContainer}
-              viewport={{ once: true }}
-            >
-              <motion.div variants={fadeIn}>
-                <h3 className="text-2xl font-semibold mb-2 flex items-center gap-3">
+      {/* Our Mission and Vision */}
+      <motion.section 
+        className="py-16"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={fadeInVariants}
+      >
+        <div className="container grid md:grid-cols-2 gap-12 items-center">
+          <motion.div variants={fadeInVariants}>
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="flex-row items-center gap-4">
+                <div className="p-3 bg-primary/10 rounded-full">
                   <Target className="w-8 h-8 text-primary" />
-                  رسالتنا
-                </h3>
-                {isLoading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground leading-relaxed">
-                    {content.our_mission_text || 'توفير تعليم قرآني عالي الجودة عبر الإنترنت، يجمع بين الدقة في التلقين والمرونة في الجدولة، مع التركيز على بناء علاقة روحية قوية بين الطالب والقرآن.'}
-                  </p>
-                )}
-              </motion.div>
-              <motion.div variants={fadeIn}>
-                <h3 className="text-2xl font-semibold mb-2 flex items-center gap-3">
-                  <Eye className="w-8 h-8 text-primary" />
-                   رؤيتنا
-                </h3>
-                {isLoading ? (
-                   <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground leading-relaxed">
-                    {content.our_vision_text || 'أن نكون الأكاديمية الرائدة عالميًا في تعليم القرآن الكريم عن بعد، ونصل بنور القرآن إلى كل بيت، ونخرّج أجيالاً حافظة وفاهمة لكتاب الله.'}
-                  </p>
-                )}
-              </motion.div>
-            </motion.div>
-          </div>
+                </div>
+                <CardTitle className="text-2xl">رسالتنا</CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground leading-relaxed">
+                توفير تعليم قرآني عالي الجودة ومتاح للجميع حول العالم، باستخدام أحدث التقنيات التعليمية لتمكين الطلاب من حفظ كتاب الله وفهم معانيه وتطبيق أحكامه بكل يسر وسهولة.
+              </CardContent>
+            </Card>
+          </motion.div>
+          <motion.div variants={fadeInVariants}>
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="flex-row items-center gap-4">
+                <div className="p-3 bg-secondary/10 rounded-full">
+                   <Eye className="w-8 h-8 text-secondary" />
+                </div>
+                <CardTitle className="text-2xl">رؤيتنا</CardTitle>
+              </CardHeader>
+              <CardContent className="text-muted-foreground leading-relaxed">
+                أن نكون الأكاديمية الرائدة عالمياً في تعليم القرآن الكريم عن بعد، وأن نخرّج أجيالاً قرآنية حافظة لكتاب الله، عاملة به، وداعمة لمجتمعاتها بالقيم الإسلامية السامية.
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
+      
+      {/* === DYNAMIC TEACHERS SECTION === */}
+      <TeachersSection />
 
-      {/* Our Teachers Section */}
-       <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <motion.div
-            className="text-center mb-16"
-            initial="hidden"
-            whileInView="visible"
-            variants={fadeIn}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl font-bold mb-3">هيئة التدريس</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              نخبة من المعلمين والمعلمات المهرة والمجازين، ملتزمون بنقل علمهم بإخلاص وإتقان.
+      {/* Our Values */}
+      <motion.section 
+        className="py-16"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={fadeInVariants}
+      >
+        <div className="container">
+          <motion.div className="text-center mb-12" variants={fadeInVariants}>
+            <h2 className="text-3xl md:text-4xl font-bold">قيمنا الأساسية</h2>
+            <p className="text-muted-foreground mt-3 max-w-xl mx-auto">
+              الأسس التي نعتمد عليها في رحلتنا التعليمية لخدمة كتاب الله.
             </p>
           </motion.div>
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
-            initial="hidden"
-            whileInView="visible"
-            variants={staggerContainer}
-            viewport={{ once: true }}
+          <motion.div 
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8"
+            variants={fadeInVariants}
           >
-            {isLoading ? (
-              Array.from({ length: 4 }).map((_, index) => (
-                <Card key={index} className="text-center">
-                  <CardContent className="flex flex-col items-center pt-6">
-                    <Skeleton className="w-24 h-24 rounded-full mb-4" />
-                    <Skeleton className="h-6 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </CardContent>
+            {[
+              { icon: BookHeart, title: 'الإخلاص', description: 'نسعى لتعليم كتاب الله بنية خالصة لوجهه الكريم.' },
+              { icon: CheckCircle, title: 'الإتقان', description: 'نلتزم بأعلى معايير الجودة في التعليم والمتابعة.' },
+              { icon: Users, title: 'الاهتمام الفردي', description: 'نوفر خططاً مخصصة لكل طالب حسب قدراته وأهدافه.' },
+            ].map(value => (
+              <motion.div key={value.title} variants={fadeInVariants}>
+                <Card className="text-center p-6 h-full hover:shadow-md transition-shadow border-0">
+                  <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                    <value.icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">{value.title}</h3>
+                  <p className="text-muted-foreground">{value.description}</p>
                 </Card>
-              ))
-            ) : (
-              teachers.map(teacher => (
-                <motion.div key={teacher.id} variants={fadeIn}>
-                  <Card className="text-center h-full hover:shadow-xl transition-shadow duration-300 overflow-hidden">
-                     <CardContent className="flex flex-col items-center p-6">
-                       <img
-                         src={teacher.imageUrl ? `${API_BASE_URL}${teacher.imageUrl}` : '/images/default-avatar.png'}
-                         alt={teacher.name}
-                         className="w-24 h-24 rounded-full object-cover mb-4 border-2 border-primary/20 shadow-md"
-                       />
-                       <h3 className="text-lg font-semibold text-primary">{teacher.name}</h3>
-                       <p className="text-sm text-muted-foreground">{teacher.title}</p>
-                     </CardContent>
-                   </Card>
-                </motion.div>
-              ))
-            )}
+              </motion.div>
+            ))}
           </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Our Values Section */}
-      <section className="py-20">
-         <div className="container mx-auto px-4">
-           <motion.div
-            className="text-center mb-16"
-            initial="hidden"
-            whileInView="visible"
-            variants={fadeIn}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl font-bold mb-3">قيمنا الأساسية</h2>
-          </motion.div>
-           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-            initial="hidden"
-            whileInView="visible"
-            variants={staggerContainer}
-            viewport={{ once: true }}
-          >
-             {/* Values remain static as they are core to the brand */}
-             <motion.div variants={fadeIn}>
-              <Card className="text-center h-full hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Heart className="w-8 h-8 text-primary" />
-                  </div>
-                  <CardTitle>الإخلاص</CardTitle>
-                </CardHeader>
-              </Card>
-            </motion.div>
-            <motion.div variants={fadeIn}>
-              <Card className="text-center h-full hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <ShieldCheck className="w-8 h-8 text-primary" />
-                  </div>
-                  <CardTitle>الإتقان</CardTitle>
-                </CardHeader>
-              </Card>
-            </motion.div>
-            <motion.div variants={fadeIn}>
-              <Card className="text-center h-full hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-primary" />
-                  </div>
-                  <CardTitle>المرونة</CardTitle>
-                </CardHeader>
-              </Card>
-            </motion.div>
-           </motion.div>
-         </div>
-       </section>
+      {/* Call to Action */}
+      <motion.section
+        className="py-20"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.5 }}
+        variants={fadeInVariants}
+      >
+        <div className="container text-center">
+          <h2 className="text-3xl font-bold mb-4">
+            انضم إلى رحلتنا القرآنية
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8">
+            ابدأ الآن رحلتك في حفظ وتدبر القرآن الكريم مع نخبة من المعلمين المتخصصين.
+          </p>
+          <Button size="lg" className="text-lg px-8" asChild>
+            <Link to="/register">سجل في جلسة تجريبية مجانية</Link>
+          </Button>
+        </div>
+      </motion.section>
     </div>
   );
 };

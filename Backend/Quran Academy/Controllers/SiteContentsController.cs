@@ -1,9 +1,11 @@
-﻿using Controllers;
+
+using Controllers;
 using Dto;
 using Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Models;
+using System.Linq;
 
 namespace Controllers;
 
@@ -13,6 +15,27 @@ public class SiteContentsController : ApiBaseController
 {
     public SiteContentsController(IUnitofwork unitofwork) : base(unitofwork)
     {
+    }
+
+    [HttpGet("GetSiteContent")]
+    public async Task<IActionResult> GetSiteContent()
+    {
+        var siteContent = (await _unitofwork.siteContents.GetAllAsync())
+                            .OrderByDescending(sc => sc.Id)
+                            .FirstOrDefault();
+
+        if (siteContent == null)
+        {
+            return NotFound("No site content has been configured yet.");
+        }
+
+        var dto = new SiteContentDto
+        {
+            Email = siteContent.Email,
+            Phone = siteContent.Phone
+        };
+
+        return Ok(dto);
     }
 
     [HttpPost("CreateSiteContent")]
@@ -25,7 +48,7 @@ public class SiteContentsController : ApiBaseController
         };
         await _unitofwork.siteContents.AddAsync(siteContent);
         _unitofwork.Save();
-        return Ok("Created");
+        return Ok(new { message = "Created" });
     }
 
     [HttpPut("UpdateSiteContent")]
@@ -40,6 +63,6 @@ public class SiteContentsController : ApiBaseController
         siteContent.Phone = dto.Phone;
         _unitofwork.siteContents.Update(siteContent);
         _unitofwork.Save();
-        return Ok("Updated");
+        return Ok(new { message = "Updated" });
     }
 }

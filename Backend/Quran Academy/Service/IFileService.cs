@@ -1,8 +1,10 @@
-﻿
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 
-namespace Services;
+namespace Service;
 
 public interface IFileService
 {
-    Task<string> UploadFileAsync(IFormFile file);
+    Task<string> SaveFileAsync(IFormFile file, string subfolder);
+    void DeleteFile(string relativePath);
 }
