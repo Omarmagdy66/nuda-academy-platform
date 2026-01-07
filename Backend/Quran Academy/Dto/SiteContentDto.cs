@@ -1,12 +1,9 @@
-// Backend/Models/SiteContent.cs
-using System.ComponentModel.DataAnnotations;
-
-namespace Dto;
-
-public class SiteContentDto
+namespace Dto
 {
-
-    public string Email { get; set; } 
-
-    public string Phone { get; set; }
+    public class SiteContentDto
+    {
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+        public string? Password { get; set; }
+    }
 }

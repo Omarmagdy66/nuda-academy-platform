@@ -14,13 +14,26 @@ interface SiteContentDto {
   phone: string;
 }
 
+// Fetch the site content from the correct public endpoint
 const fetchSiteContent = async (): Promise<SiteContentDto> => {
-  const response = await fetch('https://tibyanacademy.runasp.net/api/SiteContents/GetSiteContent');
+  const response = await fetch('https://tibyanacademy.runasp.net/api/SiteContents/GetAll');
+  
   if (!response.ok) {
-    // Return default values on error (e.g., 404 Not Found)
+    // If the API call fails, return default values.
+    console.error('Failed to fetch site content, using fallback values.');
     return { email: 'info@nooralhudaacademy.com', phone: '+966501234567' };
   }
-  return response.json();
+
+  const data = await response.json();
+  
+  // The GetAll endpoint returns an array. We'll use the first entry.
+  if (Array.isArray(data) && data.length > 0) {
+    return { email: data[0].email, phone: data[0].phone };
+  }
+
+  // If there's no content, return default values.
+  console.warn('Site content is empty, using fallback values.');
+  return { email: 'info@nooralhudaacademy.com', phone: '+966501234567' };
 };
 
 
@@ -28,8 +41,9 @@ const Layout = () => {
   const location = useLocation();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
+  // Use a unique query key for the layout's site content
   const { data: siteContent, isLoading } = useQuery<SiteContentDto>({
-    queryKey: ['siteContentLayout'],
+    queryKey: ['siteContentLayout'], 
     queryFn: fetchSiteContent,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });

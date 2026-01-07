@@ -96,6 +96,7 @@ namespace Quran_Academy
             builder.Services.AddOpenApi();
             builder.Services.AddTransient<IUnitofwork, Unitofwork>();
             builder.Services.AddScoped<IFileService, FileService>();
+            builder.Services.AddScoped<EncryptionService>();
             var app = builder.Build();
 
 
