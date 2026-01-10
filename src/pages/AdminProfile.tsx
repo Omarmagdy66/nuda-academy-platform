@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-import { ThemeToggle } from "@/components/ThemeToggle"; // Import the ThemeToggle component
 
 const API_BASE_URL = "https://tibyanacademy.runasp.net";
 
@@ -152,20 +151,19 @@ const AdminProfile = () => {
   };
 
   return (
-    <div className="container mx-auto p-8 max-w-2xl">
+    <div className="container mx-auto p-8 max-w-2xl text-gray-900 dark:text-gray-100">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">إدارة الملف الشخصي</h1>
-        <ThemeToggle />
       </div>
       
-      <form onSubmit={handleUpdate} className="space-y-4 bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-semibold mb-4">تحديث المعلومات</h2>
-        <p className="text-sm text-gray-500 mb-4">
+      <form onSubmit={handleUpdate} className="space-y-4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">تحديث المعلومات</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
           املأ الحقول التي ترغب في تحديثها فقط.
         </p>
         
         <div>
-          <label htmlFor="name">الاسم</label>
+          <label htmlFor="name" className="block text-sm font-medium mb-1 dark:text-gray-300">الاسم</label>
           <Input
             id="name"
             type="text"
@@ -176,7 +174,7 @@ const AdminProfile = () => {
         </div>
         
         <div>
-          <label htmlFor="email">البريد الإلكتروني</label>
+          <label htmlFor="email" className="block text-sm font-medium mb-1 dark:text-gray-300">البريد الإلكتروني</label>
           <Input
             id="email"
             type="email"
@@ -187,7 +185,7 @@ const AdminProfile = () => {
         </div>
 
         <div>
-          <label htmlFor="password">كلمة المرور</label>
+          <label htmlFor="password" className="block text-sm font-medium mb-1 dark:text-gray-300">كلمة المرور</label>
           <Input
             id="password"
             type="password"
@@ -201,11 +199,11 @@ const AdminProfile = () => {
       </form>
 
       <div className="mt-12">
-        <h2 className="text-xl font-semibold mb-4">إجراءات خطيرة</h2>
-        <div className="bg-red-50 border border-red-200 p-4 rounded-lg flex justify-between items-center">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">إجراءات خطيرة</h2>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 p-4 rounded-lg flex justify-between items-center">
             <div>
-                <h3 className="font-bold">حذف الحساب</h3>
-                <p className="text-sm text-red-700">
+                <h3 className="font-bold text-gray-900 dark:text-red-200">حذف الحساب</h3>
+                <p className="text-sm text-red-700 dark:text-red-400">
                 سيؤدي هذا إلى حذف حسابك نهائيًا. لا يمكن التراجع عن هذا الإجراء.
                 </p>
             </div>

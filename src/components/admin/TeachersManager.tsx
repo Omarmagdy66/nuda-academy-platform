@@ -18,7 +18,7 @@ interface Teacher {
   id: number;
   name: string;
   title: string;
-  gender: string;
+  gender: string; 
   bio?: string;
   imageUrl?: string;
   order: number;
@@ -29,18 +29,36 @@ interface TeacherFormData {
   id?: number;
   name: string;
   title: string;
-  gender: string;
+  gender: string; 
   bio: string;
   order: number;
   isActive: boolean;
-  imageUrl?: File | null;
+  imageFile?: File | null;
 }
 
 const API_BASE_URL = 'https://tibyanacademy.runasp.net/api/Teacher';
 const IMAGE_BASE_URL = 'https://tibyanacademy.runasp.net';
 
-// --- API Functions ---
+// --- Helper Functions ---
+const getFullImageUrl = (url: string | undefined) => {
+    if (!url) return './placeholder.svg';
+    if (url.startsWith('http') || url.startsWith('https')) {
+        return url;
+    }
+    return `${IMAGE_BASE_URL}${url}`;
+};
 
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        console.error("Authentication token not found!");
+        return {};
+    }
+    return { 'Authorization': `Bearer ${token}` };
+};
+
+
+// --- API Functions ---
 const fetchTeachers = async (): Promise<Teacher[]> => {
   const response = await fetch(`${API_BASE_URL}/GetAllTeacher`);
   if (!response.ok) {
@@ -52,14 +70,15 @@ const fetchTeachers = async (): Promise<Teacher[]> => {
 
 const createOrUpdateTeacher = async (formData: TeacherFormData) => {
   const data = new FormData();
-  data.append('name', formData.name);
-  data.append('title', formData.title);
-  data.append('gender', formData.gender);
-  data.append('bio', formData.bio);
-  data.append('order', formData.order.toString());
-  data.append('isActive', formData.isActive.toString());
-  if (formData.imageUrl) {
-    data.append('ImageUrl', formData.imageUrl);
+  
+  data.append('Name', formData.name);
+  data.append('Title', formData.title);
+  data.append('Gender', formData.gender);
+  data.append('Bio', formData.bio || '');
+  data.append('Order', formData.order.toString());
+  data.append('IsActive', formData.isActive.toString());
+  if (formData.imageFile) {
+    data.append('ImageUrl', formData.imageFile);
   }
 
   const url = formData.id 
@@ -68,19 +87,33 @@ const createOrUpdateTeacher = async (formData: TeacherFormData) => {
   
   const method = formData.id ? 'PUT' : 'POST';
 
-  const response = await fetch(url, { method, body: data });
+  const response = await fetch(url, {
+      method,
+      headers: getAuthHeaders(), // *** THIS IS THE FIX ***
+      body: data
+  });
 
   if (!response.ok) {
     const errorText = await response.text();
+     if (response.status === 401) {
+        throw new Error("Unauthorized: Please log in again.");
+    }
     throw new Error(`Failed to ${formData.id ? 'update' : 'create'} teacher: ${errorText}`);
   }
   return response.text();
 };
 
 const deleteTeacher = async (id: number) => {
-  const response = await fetch(`${API_BASE_URL}/DeleteTeacher?id=${id}`, { method: 'DELETE' });
+  const response = await fetch(`${API_BASE_URL}/DeleteTeacher?id=${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders() // *** THIS IS THE FIX ***
+  });
+
   if (!response.ok) {
       const errorText = await response.text();
+       if (response.status === 401) {
+        throw new Error("Unauthorized: Please log in again.");
+      }
       throw new Error(`Failed to delete teacher: ${errorText}`);
   }
   return response.text();
@@ -108,7 +141,7 @@ export const TeachersManager = () => {
       setIsDialogOpen(false);
       setEditingTeacher(null);
     },
-    onError: (err) => {
+    onError: (err: Error) => {
       toast({ title: "خطأ", description: err.message, variant: 'destructive' });
     },
   });
@@ -119,18 +152,24 @@ export const TeachersManager = () => {
         toast({ title: "نجاح", description: successMessage || "تم الحذف بنجاح" });
         queryClient.invalidateQueries({ queryKey: ['teachers'] });
     },
-    onError: (err) => {
+    onError: (err: Error) => {
         toast({ title: "خطأ", description: err.message, variant: 'destructive' });
     },
   });
 
   const openDialogForNew = () => {
-    setEditingTeacher({ name: '', title: '', gender: 'ذكر', bio: '', order: 0, isActive: true, imageUrl: null });
+    setEditingTeacher({ name: '', title: '', gender: 'Male', bio: '', order: 0, isActive: true, imageFile: null });
     setIsDialogOpen(true);
   };
 
   const openDialogForEdit = (teacher: Teacher) => {
-    setEditingTeacher({ ...teacher, imageUrl: null }); // Set imageUrl to null initially, user can upload a new one
+    const genderValue = teacher.gender?.toLowerCase() === 'female' || teacher.gender === 'انثي' ? 'Female' : 'Male';
+    setEditingTeacher({ 
+        ...teacher, 
+        gender: genderValue, 
+        bio: teacher.bio || '', // Ensure bio is a string
+        imageFile: null 
+    });
     setIsDialogOpen(true);
   };
   
@@ -174,10 +213,10 @@ export const TeachersManager = () => {
               <TableRow key={teacher.id}>
                  <TableCell>
                     <img 
-                        src={teacher.imageUrl ? `${IMAGE_BASE_URL}${teacher.imageUrl}` : './placeholder.svg'}
+                        src={getFullImageUrl(teacher.imageUrl)}
                         alt={teacher.name} 
                         className="h-12 w-12 rounded-full object-cover" 
-                        onError={(e) => { e.currentTarget.src = './placeholder.svg'; }} // Fallback for broken links
+                        onError={(e) => { e.currentTarget.src = './placeholder.svg'; }}
                     />
                 </TableCell>
                 <TableCell className="text-right font-medium">{teacher.name}</TableCell>
@@ -218,8 +257,8 @@ export const TeachersManager = () => {
                                     <SelectValue placeholder="اختر الجنس" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="ذكر">ذكر</SelectItem>
-                                    <SelectItem value="انثي">أنثى</SelectItem>
+                                    <SelectItem value="Male">ذكر</SelectItem>
+                                    <SelectItem value="Female">أنثى</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -233,7 +272,7 @@ export const TeachersManager = () => {
                         </div>
                          <div className="md:col-span-2 space-y-2">
                             <Label htmlFor="image">صورة المعلم (اختياري)</Label>
-                            <Input id="image" type="file" accept="image/*" onChange={(e) => setEditingTeacher({...editingTeacher, imageUrl: e.target.files ? e.target.files[0] : null})} />
+                            <Input id="image" type="file" accept="image/*" onChange={(e) => setEditingTeacher({...editingTeacher, imageFile: e.target.files ? e.target.files[0] : null})} />
                             <p className="text-xs text-muted-foreground">اترك الحقل فارغاً لاستخدام الصورة الافتراضية أو للإبقاء على الصورة الحالية عند التعديل.</p>
                         </div>
                         <div className="flex items-center space-x-2 space-x-reverse">

@@ -4,6 +4,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import WhatsAppFloat from './WhatsAppFloat';
+import ScrollToTopButton from './ScrollToTopButton'; // Import the new component
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { User, Home, UserPlus, Menu, X, Info, Package, Mail, Phone, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -14,24 +15,16 @@ interface SiteContentDto {
   phone: string;
 }
 
-// Fetch the site content from the correct public endpoint
 const fetchSiteContent = async (): Promise<SiteContentDto> => {
   const response = await fetch('https://tibyanacademy.runasp.net/api/SiteContents/GetAll');
-  
   if (!response.ok) {
-    // If the API call fails, return default values.
     console.error('Failed to fetch site content, using fallback values.');
     return { email: 'info@nooralhudaacademy.com', phone: '+966501234567' };
   }
-
   const data = await response.json();
-  
-  // The GetAll endpoint returns an array. We'll use the first entry.
   if (Array.isArray(data) && data.length > 0) {
     return { email: data[0].email, phone: data[0].phone };
   }
-
-  // If there's no content, return default values.
   console.warn('Site content is empty, using fallback values.');
   return { email: 'info@nooralhudaacademy.com', phone: '+966501234567' };
 };
@@ -41,7 +34,6 @@ const Layout = () => {
   const location = useLocation();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  // Use a unique query key for the layout's site content
   const { data: siteContent, isLoading } = useQuery<SiteContentDto>({
     queryKey: ['siteContentLayout'], 
     queryFn: fetchSiteContent,
@@ -62,19 +54,14 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
+        <div className="container flex h-28 items-center justify-between">
           <div className="flex items-center space-x-4 space-x-reverse">
             <Link to="/" className="flex items-center space-x-2 space-x-reverse">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">س</span>
-              </div>
-              <span className="font-bold text-lg text-gradient">أكاديمية سندُ القرَّاء</span>
+              <img src="/images/logo.png" alt="أكاديمية عاكفين" className="h-24" />
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6 space-x-reverse">
             {publicNavItems.map((item) => (
               <Link
@@ -98,7 +85,6 @@ const Layout = () => {
               <Link to="/register">ابدأ الآن</Link>
             </Button>
             
-            {/* Mobile Menu */}
             <div className="md:hidden">
               <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>
@@ -150,17 +136,15 @@ const Layout = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1">
         <Outlet />
       </main>
 
-      {/* Footer */}
       <footer className="border-t bg-muted/50 dark:bg-gray-900">
         <div className="container py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="font-semibold text-lg mb-4">أكاديمية سندُ القرَّاء</h3>
+              <h3 className="font-semibold text-lg mb-4">أكاديمية عاكفين</h3>
               <p className="text-muted-foreground dark:text-gray-400 text-sm">
                 رحلتك مع القرآن الكريم تبدأ هنا. تعلم واحفظ وارتقِ من أي مكان في العالم مع أفضل المعلمين.
               </p>
@@ -195,12 +179,18 @@ const Layout = () => {
             </div>
           </div>
           <div className="mt-8 pt-4 border-t text-center text-sm text-muted-foreground dark:text-gray-400">
-            <p>© 2024 أكاديمية سندُ القرَّاء. جميع الحقوق محفوظة.</p>
+            <p>© 2024 أكاديمية عاكفين. جميع الحقوق محفوظة.</p>
           </div>
         </div>
       </footer>
       
-      {!isAdminPage && siteContent?.phone && <WhatsAppFloat phoneNumber={siteContent.phone} />}
+      {/* Floating Action Buttons */}
+      {!isAdminPage && (
+        <>
+          {siteContent?.phone && <WhatsAppFloat phoneNumber={siteContent.phone} />}
+          <ScrollToTopButton />
+        </>
+      )}
     </div>
   );
 };

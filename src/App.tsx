@@ -23,7 +23,7 @@ import { TeachersManager } from "./components/admin/TeachersManager";
 import { ApplicationsViewer } from "./components/admin/ApplicationsViewer";
 import { TestimonialsManager } from "./components/admin/TestimonialsManager";
 import { DashboardSummery } from "./components/admin/DashboardSummery";
-import AdminProfile from "./pages/AdminProfile"; // Import the new profile page
+import AdminProfile from "./pages/AdminProfile"; // Re-import the profile page
 
 const queryClient = new QueryClient();
 
@@ -57,8 +57,7 @@ const App = () => (
                 <Route path="teachers" element={<TeachersManager />} />
                 <Route path="requests" element={<ApplicationsViewer />} />
                 <Route path="feedback" element={<TestimonialsManager />} />
-                <Route path="profile" element={<AdminProfile />} /> {/* Added profile route */}
-                 {/* I will add the settings route later */}
+                <Route path="profile" element={<AdminProfile />} /> {/* Restore profile route */}
               </Route>
             </Route>
 

@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, ShoppingCart, Users, Settings, FileText, BarChart, BookOpen } from "lucide-react";
+import { Home, ShoppingCart, Users, FileText, BarChart, BookOpen, User as UserIcon } from "lucide-react";
 
 const navItems = [
   { to: "overview", icon: Home, label: "نظرة عامة" },
@@ -8,14 +8,14 @@ const navItems = [
   { to: "teachers", icon: Users, label: "المعلمين" },
   { to: "feedback", icon: BarChart, label: "آراء الطلاب" },
   { to: "site-content", icon: BookOpen, label: "محتوى الموقع" },
-  { to: "settings", icon: Settings, label: "الإعدادات" },
+  { to: "profile", icon: UserIcon, label: "الملف الشخصي" }, // Restored profile link
 ];
 
 export const AdminSidebar = () => {
   return (
     <aside className="w-64 bg-white dark:bg-gray-800 shadow-md flex flex-col">
       <div className="p-6 text-center">
-        <h1 className="text-2xl font-bold">أكاديمية نور الهدى</h1>
+        <h1 className="text-2xl font-bold">أكاديمية عاكفين</h1>
       </div>
       <nav className="flex-1 px-4 py-2">
         <ul>

@@ -14,6 +14,15 @@ import { useQuery } from "@tanstack/react-query"
 const API_BASE_URL = "https://tibyanacademy.runasp.net/api";
 const IMAGE_BASE_URL = "https://tibyanacademy.runasp.net";
 
+// --- Helper Function for Image URLs ---
+const getFullImageUrl = (url: string | undefined) => {
+    if (!url) return './placeholder.svg';
+    if (url.startsWith('http') || url.startsWith('https')) {
+        return url; // It's already a full URL (from Cloudinary)
+    }
+    return `${IMAGE_BASE_URL}${url}`; // It's a relative URL
+};
+
 // --- Type Definitions ---
 interface Package {
   id: number;
@@ -40,7 +49,7 @@ interface Teacher {
   isActive: boolean;
 }
 
-// --- API Fetching Functions (REVERTED TO CORRECT ENDPOINTS) ---
+// --- API Fetching Functions ---
 const fetchActivePackages = async (): Promise<Package[]> => {
   const response = await fetch(`${API_BASE_URL}/Packages/GetAllPackages`);
   if (!response.ok) throw new Error("Failed to fetch packages.");
@@ -123,7 +132,7 @@ const TeachersSection = () => {
                 <Card className="h-full text-center hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
                      <img 
-                        src={`${IMAGE_BASE_URL}${teacher.imageUrl}`}
+                        src={getFullImageUrl(teacher.imageUrl)}
                         alt={teacher.name} 
                         className="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-2 border-primary/20"
                         onError={(e) => { e.currentTarget.src = './placeholder.svg'; }}
@@ -185,7 +194,7 @@ const TestimonialsSection = () => {
                           {item.imageUrl && (
                             <div className="mb-4 rounded-lg overflow-hidden border">
                               <img 
-                                src={`${IMAGE_BASE_URL}${item.imageUrl}`} 
+                                src={getFullImageUrl(item.imageUrl)} 
                                 alt={`شهادة من ${item.studentName}`} 
                                 className="w-full h-auto object-contain" 
                                 onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
@@ -347,7 +356,7 @@ const Index = () => {
       >
         <div className="container">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold sm:text-4xl">لماذا تختار أكاديمية سندُ القرَّاء؟</h2>
+            <h2 className="text-3xl font-bold sm:text-4xl">لماذا تختار أكاديمية عاكفين؟</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
              <Card className="text-center h-full transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-lg"><CardContent className="p-8"><Award className="w-12 h-12 mx-auto mb-4 text-emerald-600" /><h3 className="text-xl font-semibold mb-4">معلمون مجازون ومهرة</h3></CardContent></Card>

@@ -20,13 +20,23 @@ interface Teacher {
   isActive: boolean;
 }
 
+// --- Helper Function for Image URLs ---
+const getFullImageUrl = (url: string | undefined) => {
+    if (!url) return './placeholder.svg';
+    // Check if it's already a full URL (from Cloudinary or another external source)
+    if (url.startsWith('http') || url.startsWith('https')) {
+        return url;
+    }
+    // Handle old, relative URLs
+    return `${IMAGE_BASE_URL}${url}`;
+};
+
 // --- API Fetching Function ---
 const fetchActiveTeachers = async (): Promise<Teacher[]> => {
   const response = await fetch(`${API_BASE_URL}/Teacher/GetActiveTeachers`);
   if (!response.ok) throw new Error("Failed to fetch teachers.");
   return response.json();
 };
-
 
 const fadeInVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -86,7 +96,7 @@ const TeachersSection = () => {
                 <Card className="text-center h-full hover:shadow-lg transition-shadow border-0">
                   <CardContent className="p-6 flex flex-col items-center">
                     <img 
-                      src={`${IMAGE_BASE_URL}${teacher.imageUrl}`}
+                      src={getFullImageUrl(teacher.imageUrl)} // *** THIS IS THE FIX ***
                       alt={teacher.name}
                       className="w-28 h-28 rounded-full mx-auto mb-4 object-cover border-4 border-white dark:border-gray-800 shadow-md"
                       onError={(e) => { e.currentTarget.src = './placeholder.svg'; }}
@@ -113,7 +123,7 @@ const TeachersSection = () => {
 }
 
 
-const About = () => { // Renamed component to About
+const About = () => {
   return (
     <div className="bg-background">
       {/* Hero Section */}
@@ -128,7 +138,7 @@ const About = () => { // Renamed component to About
             className="text-4xl md:text-5xl font-bold text-gradient mb-4"
             variants={fadeInVariants}
           >
-            عن أكاديمية سندُ القرَّاء
+            عن أكاديمية عاكفين
           </motion.h1>
           <motion.p 
             className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto"

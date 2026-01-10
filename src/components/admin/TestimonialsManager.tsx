@@ -30,13 +30,33 @@ interface TestimonialFormData {
   testimonialText: string;
   order: number;
   isActive: boolean;
-  imageUrl?: File | null; 
+  imageFile?: File | null; 
 }
 
-const API_BASE_URL = 'https://tibyanacademy.runasp.net/api/testimonials';
+const API_BASE_URL = 'https://tibyanacademy.runasp.net/api/Testimonials';
+const IMAGE_BASE_URL = "https://tibyanacademy.runasp.net";
+
+// --- Helper Functions ---
+const getFullImageUrl = (url: string | undefined) => {
+    if (!url) return './placeholder.svg';
+    if (url.startsWith('http') || url.startsWith('https')) {
+        return url;
+    }
+    return `${IMAGE_BASE_URL}${url}`;
+};
+
+const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        // Handle cases where the token is not available
+        console.error("Authentication token not found!");
+        return {};
+    }
+    return { 'Authorization': `Bearer ${token}` };
+};
+
 
 // --- API Functions ---
-
 const fetchTestimonials = async (): Promise<Testimonial[]> => {
   const response = await fetch(`${API_BASE_URL}/GetAllTestimonials`);
   if (!response.ok) throw new Error('Failed to fetch testimonials');
@@ -45,13 +65,14 @@ const fetchTestimonials = async (): Promise<Testimonial[]> => {
 
 const createOrUpdateTestimonial = async (formData: TestimonialFormData) => {
   const data = new FormData();
-  data.append('studentName', formData.studentName);
-  data.append('country', formData.country);
-  data.append('testimonialText', formData.testimonialText);
-  data.append('order', formData.order.toString());
-  data.append('isActive', formData.isActive.toString());
-  if (formData.imageUrl) {
-    data.append('ImageUrl', formData.imageUrl);
+  
+  data.append('StudentName', formData.studentName);
+  data.append('Country', formData.country || '');
+  data.append('TestimonialText', formData.testimonialText || '');
+  data.append('Order', formData.order.toString());
+  data.append('IsActive', formData.isActive.toString());
+  if (formData.imageFile) {
+    data.append('ImageUrl', formData.imageFile);
   }
 
   const url = formData.id
@@ -60,23 +81,41 @@ const createOrUpdateTestimonial = async (formData: TestimonialFormData) => {
 
   const method = formData.id ? 'PUT' : 'POST';
 
-  const response = await fetch(url, { method, body: data });
+  const response = await fetch(url, {
+    method,
+    headers: getAuthHeaders(), // *** THIS IS THE FIX ***
+    body: data
+  });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Failed to ${formData.id ? 'update' : 'create'} testimonial: ${errorText}`);
+    // Handle specific auth error
+    if (response.status === 401) {
+        throw new Error("Unauthorized: Please log in again.");
+    }
+    console.error("Backend Error:", errorText);
+    throw new Error(`Failed to ${formData.id ? 'update' : 'create'} testimonial`);
   }
   return response.text();
 };
 
 const deleteTestimonial = async (id: number) => {
-  const response = await fetch(`${API_BASE_URL}/DeleteTestimonial?id=${id}`, { method: 'DELETE' });
-  if (!response.ok) throw new Error('Failed to delete testimonial');
+  const response = await fetch(`${API_BASE_URL}/DeleteTestimonial?id=${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders() // *** THIS IS THE FIX ***
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+     if (response.status === 401) {
+        throw new Error("Unauthorized: Please log in again.");
+    }
+    throw new Error(`Failed to delete testimonial: ${errorText}`);
+  }
   return response.text();
 };
 
 // --- Component ---
-
 export const TestimonialsManager = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -96,7 +135,7 @@ export const TestimonialsManager = () => {
       setIsDialogOpen(false);
       setEditingItem(null);
     },
-    onError: (err) => {
+    onError: (err: Error) => {
       toast({ title: "خطأ", description: err.message, variant: 'destructive' });
     },
   });
@@ -107,29 +146,32 @@ export const TestimonialsManager = () => {
       toast({ title: "نجاح", description: successMessage || "تم الحذف بنجاح" });
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
     },
-    onError: (err) => {
+    onError: (err: Error) => {
       toast({ title: "خطأ", description: err.message, variant: 'destructive' });
     },
   });
 
   const openDialogForNew = () => {
-    setEditingItem({ studentName: '', country: '', testimonialText: '', order: 0, isActive: true, imageUrl: null });
+    setEditingItem({ studentName: '', country: '', testimonialText: '', order: 0, isActive: true, imageFile: null });
     setIsDialogOpen(true);
   };
 
   const openDialogForEdit = (item: Testimonial) => {
-    setEditingItem({ ...item, imageUrl: null });
+    setEditingItem({ 
+        ...item, 
+        country: item.country || '', 
+        testimonialText: item.testimonialText || '',
+        imageFile: null 
+    });
     setIsDialogOpen(true);
   };
 
   const handleFormSubmit = () => {
     if (!editingItem) return;
-
     if (!editingItem.studentName) {
       toast({ title: "بيانات ناقصة", description: "اسم الطالب حقل مطلوب.", variant: "destructive" });
       return;
     }
-
     mutation.mutate(editingItem as TestimonialFormData);
   };
   
@@ -162,9 +204,10 @@ export const TestimonialsManager = () => {
               <TableRow key={item.id}>
                 <TableCell>
                   <img 
-                    src={`https://tibyanacademy.runasp.net${item.imageUrl}` || './placeholder.svg'} 
+                    src={getFullImageUrl(item.imageUrl)}
                     alt={item.studentName} 
                     className="h-12 w-12 rounded-full object-cover" 
+                    onError={(e) => { e.currentTarget.src = './placeholder.svg'; }}
                   />
                 </TableCell>
                 <TableCell className="text-right font-medium">{item.studentName}</TableCell>
@@ -218,7 +261,7 @@ export const TestimonialsManager = () => {
                  </div>
                 <div className="space-y-2">
                   <Label htmlFor="image">صورة الطالب (اختياري)</Label>
-                  <Input id="image" type="file" accept="image/*" onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.files ? e.target.files[0] : null })} />
+                  <Input id="image" type="file" accept="image/*" onChange={(e) => setEditingItem({ ...editingItem, imageFile: e.target.files ? e.target.files[0] : null })} />
                   <p className="text-xs text-muted-foreground">اترك الحقل فارغاً للإبقاء على الصورة الحالية عند التعديل.</p>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { WhatsAppIcon } from './Icons'; // Assuming you have a WhatsApp icon component
+import { WhatsAppIcon } from './Icons';
 import { X, MessageCircle } from 'lucide-react';
 
 interface WhatsAppFloatProps {
@@ -13,7 +13,7 @@ const WhatsAppFloat: React.FC<WhatsAppFloatProps> = ({ phoneNumber }) => {
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const cleanPhoneNumber = phoneNumber.replace(/[^\d+]/g, '');
-  const defaultMessage = encodeURIComponent('مرحباً، أود الاستفسار عن باقات أكاديمية نور الهُدى');
+  const defaultMessage = encodeURIComponent('مرحباً، أود الاستفسار عن باقات أكاديمية عاكفين');
   const whatsAppUrl = `https://wa.me/${cleanPhoneNumber}?text=${defaultMessage}`;
 
   const handleMouseEnter = () => {
@@ -55,9 +55,11 @@ const WhatsAppFloat: React.FC<WhatsAppFloatProps> = ({ phoneNumber }) => {
             </div>
             <div className="p-5 bg-card">
               <div className="flex flex-col items-start space-y-4">
-                <div className="bg-muted p-3 rounded-lg rounded-br-none self-end max-w-xs">
-                  <p className="text-sm text-right">نرحب باستفساراتكم</p>
+                {/* === FIX START === */}
+                <div className="bg-muted p-3 rounded-lg rounded-br-none self-end">
+                  <p className="text-sm text-right text-muted-foreground">نرحب باستفساراتكم</p>
                 </div>
+                {/* === FIX END === */}
                 <a 
                   href={whatsAppUrl} 
                   target="_blank" 
@@ -96,4 +98,3 @@ const WhatsAppFloat: React.FC<WhatsAppFloatProps> = ({ phoneNumber }) => {
 };
 
 export default WhatsAppFloat;
-
