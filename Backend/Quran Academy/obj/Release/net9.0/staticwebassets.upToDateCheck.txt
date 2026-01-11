@@ -1,2 +1,0 @@
-wwwroot\Image\Female.png
-wwwroot\Image\Male.png
