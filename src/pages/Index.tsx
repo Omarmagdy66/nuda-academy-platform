@@ -298,7 +298,7 @@ const Index = () => {
       {/* Hero Section */}
       <motion.section
         className="relative overflow-hidden bg-cover bg-center text-white"
-        style={{ backgroundImage: "url('/images/hero-background.jpg')" }}
+        style={{ backgroundImage: "url('/images/hero-background.webp')" }}
         variants={sectionVariants}
         initial="hidden"
         animate="visible"
