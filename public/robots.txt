@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://sanad-alqurra.com/sitemap.xml
+Sitemap: https://akfeenacademy.vercel.app/sitemap.xml
