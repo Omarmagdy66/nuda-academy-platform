@@ -1,0 +1,71 @@
+
+.PhoneInput {
+  display: flex;
+  align-items: center;
+}
+
+.PhoneInputInput {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  padding: 0.5rem 1rem;
+  border: 1px solid hsl(var(--input));
+  border-radius: var(--radius);
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-size: 1rem;
+}
+
+.PhoneInputInput:focus {
+  outline: none;
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.4);
+}
+
+
+.PhoneInputCountry {
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  margin-right: 0.5rem;
+  
+}
+
+.PhoneInputCountrySelect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 1;
+    border: 1px solid hsl(var(--input));
+    border-radius: var(--radius);
+    background-color: hsl(var(--background));
+    padding: 0 0.5rem;
+    opacity: 0; /* Make the default select invisible */
+    cursor: pointer;
+}
+
+.PhoneInputCountryIcon {
+    width: 2rem; 
+    height: auto;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Custom Arrow */
+.PhoneInputCountry::after {
+    content: '\25BE'; /* Unicode for down-pointing triangle */
+    color: hsl(var(--muted-foreground));
+    font-size: 0.8rem;
+    margin-left: 0.25rem;
+    pointer-events: none; /* Make it non-interactive */
+
+}
+
+
