@@ -18,13 +18,15 @@ import {
   BarChart, 
   ClipboardList, 
   BookOpen, 
-  Settings
+  Settings,
+  FolderTree
 } from "lucide-react"
 
 // Import the new manager components
 import { TeachersManager } from "@/components/admin/TeachersManager";
 import { TestimonialsManager } from "@/components/admin/TestimonialsManager";
 import { PackagesManager } from "@/components/admin/PackagesManager";
+import { PackageCategoryManager } from "@/components/admin/PackageCategoryManager"; // Import new component
 import { ApplicationsViewer } from "@/components/admin/ApplicationsViewer";
 import { SiteContentEditor } from "@/components/admin/SiteContentEditor";
 
@@ -35,12 +37,13 @@ const AdminDashboardV2 = () => {
         <h2 className="text-3xl font-bold tracking-tight">لوحة التحكم</h2>
       </div>
       <Tabs defaultValue="overview" className="space-y-4" dir="rtl">
-        <TabsList className="grid w-full grid-cols-2 h-auto md:grid-cols-3 lg:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-2 h-auto md:grid-cols-4 lg:grid-cols-7">
           <TabsTrigger value="overview"><BarChart className="ml-2 h-4 w-4"/>نظرة عامة</TabsTrigger>
           <TabsTrigger value="applications"><ClipboardList className="ml-2 h-4 w-4"/>طلبات التسجيل</TabsTrigger>
           <TabsTrigger value="teachers"><Users className="ml-2 h-4 w-4"/>المعلمون</TabsTrigger>
           <TabsTrigger value="testimonials"><BookOpen className="ml-2 h-4 w-4"/>آراء الطلاب</TabsTrigger>
           <TabsTrigger value="packages"><DollarSign className="ml-2 h-4 w-4"/>الباقات</TabsTrigger>
+          <TabsTrigger value="packageCategories"><FolderTree className="ml-2 h-4 w-4"/>فئات الباقات</TabsTrigger> {/* New Tab Trigger */}
           <TabsTrigger value="content"><Settings className="ml-2 h-4 w-4"/>محتوى الموقع</TabsTrigger>
         </TabsList>
         
@@ -75,6 +78,11 @@ const AdminDashboardV2 = () => {
         {/* Packages Tab */}
         <TabsContent value="packages" className="space-y-4">
           <PackagesManager />
+        </TabsContent>
+
+        {/* Package Categories Tab */}
+        <TabsContent value="packageCategories" className="space-y-4">
+          <PackageCategoryManager />
         </TabsContent>
         
         {/* Content Editor Tab */}

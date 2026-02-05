@@ -1,50 +1,50 @@
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle } from "lucide-react"
-import { Link } from "react-router-dom"
-import { Badge } from "@/components/ui/badge"
-import { motion } from "framer-motion"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CheckCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
-// --- Static Data ---
-const packages = [
-  {
-    id: 1,
-    name: "الباقة الفضية",
-    description: "للمبتدئين والراغبين في تعلم الأساسيات",
-    price: 150,
-    features: ["جلستان أسبوعيًا", "30 دقيقة للجلسة", "متابعة فردية"],
-    isMostPopular: false,
-  },
-  {
-    id: 2,
-    name: "الباقة الذهبية",
-    description: "للمستويات المتوسطة الراغبة في الحفظ والمراجعة",
-    price: 250,
-    features: [
-      "4 جلسات أسبوعيًا",
-      "45 دقيقة للجلسة",
-      "متابعة مكثفة",
-      "تقارير دورية",
-    ],
-    isMostPopular: true,
-  },
-  {
-    id: 3,
-    name: "الباقة الماسية",
-    description: "للمتقدمين الراغبين في الحصول على إجازة",
-    price: 400,
-    features: [
-      "6 جلسات أسبوعيًا",
-      "60 دقيقة للجلسة",
-      "متابعة مكثفة",
-      "إعداد للإجازة",
-    ],
-    isMostPopular: false,
-  },
-];
+// --- Define the Package interface ---
+interface Package {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  features: string[];
+  isFeatured: boolean;
+}
 
 const PackagesPage = () => {
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        const response = await fetch("/api/Packages/GetAllPackages");
+        if (!response.ok) {
+          throw new Error("Failed to fetch packages");
+        }
+        const data: Package[] = await response.json();
+        setPackages(data);
+      } catch (err) {
+        if (err instanceof Error) {
+            setError(err.message);
+        } else {
+            setError("An unknown error occurred");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPackages();
+  }, []);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -62,6 +62,14 @@ const PackagesPage = () => {
     }
   };
 
+    if (loading) {
+        return <div className="container py-20 text-center">Loading...</div>;
+    }
+
+    if (error) {
+        return <div className="container py-20 text-center text-red-500">Error: {error}</div>;
+    }
+
   return (
     <div className="container py-20">
       <div className="text-center mb-16">
@@ -73,7 +81,7 @@ const PackagesPage = () => {
         </p>
       </div>
 
-      <motion.div 
+      <motion.div
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         variants={containerVariants}
         initial="hidden"
@@ -81,8 +89,8 @@ const PackagesPage = () => {
       >
         {packages.map(pkg => (
           <motion.div variants={itemVariants} key={pkg.id}>
-            <Card className={`h-full flex flex-col ${pkg.isMostPopular ? "border-primary shadow-lg" : ""}`}>
-              {pkg.isMostPopular && <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2">الأكثر شيوعاً</Badge>}
+            <Card className={`h-full flex flex-col ${pkg.isFeatured ? "border-primary shadow-lg" : ""}`}>
+              {pkg.isFeatured && <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2">الأكثر شيوعاً</Badge>}
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl">{pkg.name}</CardTitle>
                 <CardDescription>{pkg.description}</CardDescription>
@@ -97,7 +105,7 @@ const PackagesPage = () => {
                     </li>
                   ))}
                 </ul>
-                <Button asChild className="w-full mt-auto text-lg py-6" variant={pkg.isMostPopular ? "default" : "outline"}>
+                <Button asChild className="w-full mt-auto text-lg py-6" variant={pkg.isFeatured ? "default" : "outline"}>
                   <Link to="/register">اشترك الآن</Link>
                 </Button>
               </CardContent>

@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://tibyanacademy.runasp.net/',
+        target: 'https://tibyanacademy.runasp.net/',
         changeOrigin: true,
         secure: false,
       }

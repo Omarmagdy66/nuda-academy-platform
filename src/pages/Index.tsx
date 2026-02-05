@@ -27,9 +27,11 @@ const getFullImageUrl = (url: string | undefined) => {
 interface Package {
   id: number;
   name: string;
+  description?: string; // Optional description
   price: number;
   features: string[];
   isActive: boolean;
+  isFeatured: boolean;
 }
 
 interface Testimonial {
@@ -228,6 +230,9 @@ const PricingSection = () => {
     queryFn: fetchActivePackages,
   });
 
+  // Filter for featured packages to display on the homepage
+  const featuredPackages = packages?.filter(pkg => pkg.isFeatured);
+
   return (
      <motion.section
         className="py-20 bg-gray-100/30 dark:bg-gray-900/40"
@@ -249,13 +254,14 @@ const PricingSection = () => {
             </div>
           )}
 
-          {packages && (
+          {featuredPackages && featuredPackages.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {packages.slice(0, 3).map(pkg => (
+              {featuredPackages.slice(0, 3).map(pkg => (
                 <motion.div variants={itemVariants} key={pkg.id}>
                     <Card className={`relative h-full flex flex-col`}>
                         <CardHeader className="text-center">
                             <CardTitle>{pkg.name}</CardTitle>
+                            <p className="text-sm text-muted-foreground mt-2 min-h-[40px]">{pkg.description}</p>
                             <div className="text-4xl font-bold my-2">${pkg.price}</div>
                             <div className="text-sm text-muted-foreground">شهرياً</div>
                         </CardHeader>
@@ -278,6 +284,7 @@ const PricingSection = () => {
             </div>
           )}
 
+          {/* This button shows if there are more packages (featured or not) than displayed */}
           {packages && packages.length > 3 && (
              <div className="text-center mt-12">
                 <Button asChild variant="outline">

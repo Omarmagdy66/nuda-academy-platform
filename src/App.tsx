@@ -20,11 +20,12 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 import { SiteContentEditor } from "./components/admin/SiteContentEditor";
 import { PackagesManager } from "./components/admin/PackagesManager";
+import { PackageCategoryManager } from "./components/admin/PackageCategoryManager"; // Import the new component
 import { TeachersManager } from "./components/admin/TeachersManager";
 import { ApplicationsViewer } from "./components/admin/ApplicationsViewer";
 import { TestimonialsManager } from "./components/admin/TestimonialsManager";
 import { DashboardSummery } from "./components/admin/DashboardSummery";
-import AdminProfile from "./pages/AdminProfile"; // Re-import the profile page
+import AdminProfile from "./pages/AdminProfile"; 
 
 const queryClient = new QueryClient();
 
@@ -55,10 +56,11 @@ const App = () => (
                 <Route path="overview" element={<DashboardSummery />} />
                 <Route path="site-content" element={<SiteContentEditor />} />
                 <Route path="packages" element={<PackagesManager />} />
+                <Route path="package-categories" element={<PackageCategoryManager />} /> {/* Add the new route */}
                 <Route path="teachers" element={<TeachersManager />} />
                 <Route path="requests" element={<ApplicationsViewer />} />
                 <Route path="feedback" element={<TestimonialsManager />} />
-                <Route path="profile" element={<AdminProfile />} /> {/* Restore profile route */}
+                <Route path="profile" element={<AdminProfile />} />
               </Route>
             </Route>
 

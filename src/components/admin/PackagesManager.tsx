@@ -8,63 +8,97 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Trash2, Edit, PlusCircle } from 'lucide-react';
+import { Loader2, Trash2, Edit, PlusCircle, Star } from 'lucide-react';
 
-// Zod schema for package form validation (in Arabic)
+// --- Zod Schema ---
 const packageSchema = z.object({
   name: z.string().min(1, "اسم الباقة مطلوب"),
+  description: z.string().optional().nullable(),
   price: z.coerce.number().min(0, "يجب أن يكون السعر رقمًا موجبًا"),
   features: z.string().min(1, "المميزات مطلوبة (مفصولة بفاصلة)"),
   isActive: z.boolean(),
+  isFeatured: z.boolean(),
+  packageCategoryId: z.coerce.number().nullable().optional(),
 });
 type PackageFormValues = z.infer<typeof packageSchema>;
 
+// --- Interfaces ---
+interface PackageCategory {
+  id: number;
+  name: string;
+}
 interface Package extends PackageFormValues {
   id: number;
 }
 
-// API Functions with improved error handling and features transformation
-const apiBaseUrl = 'https://tibyanacademy.runasp.net/api/Packages';
+// --- API Functions ---
+const apiBaseUrl = 'https://tibyanacademy.runasp.net/api'; // Use absolute URL
 
 const handleApiResponse = async (response: Response) => {
+  const text = await response.text();
   if (!response.ok) {
-    const errorText = await response.text();
-    // Try to parse the error text as JSON for a more detailed message
     try {
-        const errorJson = JSON.parse(errorText);
-        // Extract validation errors if they exist
+        const errorJson = JSON.parse(text);
         if (errorJson.errors) {
             const errorMessages = Object.values(errorJson.errors).flat().join(' \n');
             throw new Error(errorMessages);
         }
-        throw new Error(errorJson.title || errorText);
+        throw new Error(errorJson.title || text);
     } catch (e) {
-        // If parsing fails, use the raw text
-        throw new Error(errorText || `فشل الطلب مع الحالة: ${response.status}`);
+        throw new Error(text || `Request failed with status: ${response.status}`);
     }
   }
-  return response.text();
+  if (!text) {
+      return "Success";
+  }
+  try {
+      return JSON.parse(text);
+  } catch (e) {
+      return text; // Return plain text if not JSON
+  }
 };
 
 const fetchPackages = async (): Promise<Package[]> => {
-  const res = await fetch(`${apiBaseUrl}/GetAllPackages`);
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${apiBaseUrl}/Packages/GetAllPackages`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (res.status === 404) return [];
   if (!res.ok) throw new Error('فشل في جلب الباقات');
   const packages = await res.json();
-  // The backend sends features as an array, but the form needs a string.
-  return packages.map((pkg: any) => ({ ...pkg, features: Array.isArray(pkg.features) ? pkg.features.join(', ') : pkg.features }));
+  if (!Array.isArray(packages)) return [];
+  return packages.map((pkg: any) => ({ 
+      ...pkg, 
+      features: Array.isArray(pkg.features) ? pkg.features.join(', ') : '',
+      description: pkg.description || '' 
+    }));
 };
+
+const fetchPackageCategories = async (): Promise<PackageCategory[]> => {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${apiBaseUrl}/PackageCategory/GetAllPackageCategories`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.status === 404) return [];
+    if (!res.ok) throw new Error('فشل في جلب فئات الباقات');
+    const data = await res.json();
+    if (!Array.isArray(data)) return [];
+    return data;
+}
 
 const createPackage = async (newPackage: PackageFormValues) => {
   const token = localStorage.getItem('token');
   const payload = {
     ...newPackage,
-    features: newPackage.features.split(',').map(f => f.trim()).filter(f => f), // Convert string to string array
+    features: newPackage.features.split(',').map(f => f.trim()).filter(f => f),
   };
-  const res = await fetch(`${apiBaseUrl}/CreatePackage`, {
+  const res = await fetch(`${apiBaseUrl}/Packages/CreatePackage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
     body: JSON.stringify(payload),
@@ -74,11 +108,11 @@ const createPackage = async (newPackage: PackageFormValues) => {
 
 const updatePackage = async ({ id, ...updatedPackage }: Package) => {
   const token = localStorage.getItem('token');
-    const payload = {
+  const payload = {
     ...updatedPackage,
-    features: updatedPackage.features.split(',').map(f => f.trim()).filter(f => f), // Convert string to string array
+    features: updatedPackage.features.split(',').map(f => f.trim()).filter(f => f),
   };
-  const res = await fetch(`${apiBaseUrl}/UpdatePackage?id=${id}`, {
+  const res = await fetch(`${apiBaseUrl}/Packages/UpdatePackage?id=${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
     body: JSON.stringify(payload),
@@ -88,7 +122,7 @@ const updatePackage = async ({ id, ...updatedPackage }: Package) => {
 
 const deletePackage = async (id: number) => {
   const token = localStorage.getItem('token');
-  const res = await fetch(`${apiBaseUrl}/DeletePackage?id=${id}`, {
+  const res = await fetch(`${apiBaseUrl}/Packages/DeletePackage?id=${id}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` },
   });
@@ -96,13 +130,25 @@ const deletePackage = async (id: number) => {
 };
 
 
-// Component for the form (in Arabic)
-const PackageForm = ({ pkg, onFinished }: { pkg?: Package, onFinished: () => void }) => {
+// --- Components ---
+
+const PackageForm = ({ pkg, categories, onFinished }: { pkg?: Package, categories: PackageCategory[], onFinished: () => void }) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  const defaultValues = pkg ? { ...pkg } : {
+    name: '',
+    description: '',
+    price: 0,
+    features: '',
+    isActive: true,
+    isFeatured: false,
+    packageCategoryId: null,
+  };
+
   const form = useForm<PackageFormValues>({
     resolver: zodResolver(packageSchema),
-    defaultValues: pkg ? { ...pkg } : { name: '', price: 0, features: '', isActive: true },
+    defaultValues,
   });
 
   const onMutationSuccess = (message: string) => {
@@ -119,23 +165,18 @@ const PackageForm = ({ pkg, onFinished }: { pkg?: Package, onFinished: () => voi
     });
   };
   
-  const createMutation = useMutation({ 
-    mutationFn: createPackage, 
-    onSuccess: () => onMutationSuccess('تم إنشاء الباقة بنجاح'),
-    onError: onMutationError,
-  });
-  const updateMutation = useMutation({ 
-    mutationFn: updatePackage, 
-    onSuccess: () => onMutationSuccess('تم تحديث الباقة بنجاح'),
-    onError: onMutationError,
-  });
-
+  const createMutation = useMutation({ mutationFn: createPackage, onSuccess: () => onMutationSuccess('تم إنشاء الباقة بنجاح'), onError: onMutationError });
+  const updateMutation = useMutation({ mutationFn: updatePackage, onSuccess: () => onMutationSuccess('تم تحديث الباقة بنجاح'), onError: onMutationError });
 
   const onSubmit = (values: PackageFormValues) => {
+    const submissionValues = {
+        ...values,
+        packageCategoryId: values.packageCategoryId || null
+    };
     if (pkg) {
-      updateMutation.mutate({ id: pkg.id, ...values });
+      updateMutation.mutate({ id: pkg.id, ...submissionValues });
     } else {
-      createMutation.mutate(values);
+      createMutation.mutate(submissionValues);
     }
   };
 
@@ -145,43 +186,73 @@ const PackageForm = ({ pkg, onFinished }: { pkg?: Package, onFinished: () => voi
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 text-right">
         <FormField control={form.control} name="name" render={({ field }) => <FormItem><FormLabel>اسم الباقة</FormLabel><FormControl><Input placeholder="مثال: الباقة الذهبية" {...field} /></FormControl><FormMessage /></FormItem>} />
-        <FormField control={form.control} name="price" render={({ field }) => <FormItem><FormLabel>السعر (بالريال السعودي)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>} />
-        <FormField control={form.control} name="features" render={({ field }) => <FormItem><FormLabel>مميزات الباقة</FormLabel><FormControl><Input placeholder="اكتب المميزات مفصولة بفاصلة، مثال: 4 جلسات, متابعة" {...field} /></FormControl><FormMessage /></FormItem>} />
+        <FormField control={form.control} name="description" render={({ field }) => <FormItem><FormLabel>الوصف</FormLabel><FormControl><Textarea placeholder="وصف قصير للباقة..." {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>} />
+        
         <FormField
-          control={form.control}
-          name="isActive"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel>تفعيل الباقة</FormLabel>
-                <FormDescription>
-                  عند تفعيلها، ستظهر الباقة في صفحات الموقع للعملاء.
-                </FormDescription>
-              </div>
-              {/* Fix for RTL Switch issue */}
-              <FormControl dir="ltr">
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
+            control={form.control}
+            name="packageCategoryId"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>فئة الباقة</FormLabel>
+                <Select
+                    dir="rtl"
+                    onValueChange={(value) => field.onChange(value ? Number(value) : null)}
+                    value={field.value?.toString()}
+                >
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder="اختر فئة (اختياري)" />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                    {categories?.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+                </FormItem>
+            )}
         />
+        
+        <FormField control={form.control} name="price" render={({ field }) => <FormItem><FormLabel>السعر (بالريال السعودي)</FormLabel><FormControl><Input type="number" step="0.01" {...field} /></FormControl><FormMessage /></FormItem>} />
+        <FormField control={form.control} name="features" render={({ field }) => <FormItem><FormLabel>مميزات الباقة</FormLabel><FormControl><Textarea placeholder="اكتب المميزات مفصولة بفاصلة، مثال: 4 جلسات, متابعة" {...field} /></FormControl><FormMessage /></FormItem>} />
+        
+        <FormField control={form.control} name="isFeatured" render={({ field }) => (
+            <FormItem className="rounded-lg border p-4">
+                <div className="flex flex-row items-center justify-between">
+                    <FormLabel>باقة مميزة</FormLabel>
+                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                </div>
+                <FormDescription className="pt-2">ستظهر بشكل بارز في صفحة الباقات.</FormDescription>
+            </FormItem>
+        )} />
+
+        <FormField control={form.control} name="isActive" render={({ field }) => (
+            <FormItem className="rounded-lg border p-4">
+                <div className="flex flex-row items-center justify-between">
+                    <FormLabel>تفعيل الباقة</FormLabel>
+                    <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                </div>
+                <FormDescription className="pt-2">ستظهر الباقة في صفحات الموقع للعملاء.</FormDescription>
+            </FormItem>
+        )} />
+
         <Button type="submit" className="w-full" disabled={isLoading}>{isLoading ? <><Loader2 className="ml-2 h-4 w-4 animate-spin" /> جاري الحفظ...</> : 'حفظ'}</Button>
       </form>
     </Form>
   );
 };
 
-// Main component to manage packages (in Arabic)
 export const PackagesManager = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<Package | undefined>(undefined);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: packages, isLoading, error } = useQuery<Package[], Error>({ queryKey: ['packages'], queryFn: fetchPackages });
+  const { data: packages, isLoading: isLoadingPackages, error: packagesError } = useQuery<Package[], Error>({ queryKey: ['packages'], queryFn: fetchPackages });
+  const { data: categories, isLoading: isLoadingCategories, error: categoriesError } = useQuery<PackageCategory[], Error>({ queryKey: ['packageCategories'], queryFn: fetchPackageCategories });
+  
   const deleteMutation = useMutation({ 
     mutationFn: deletePackage, 
     onSuccess: () => { 
@@ -197,6 +268,9 @@ export const PackagesManager = () => {
     setSelectedPackage(pkg);
     setIsDialogOpen(true);
   }
+  
+  const isLoading = isLoadingPackages || isLoadingCategories;
+  const error = packagesError || categoriesError;
 
   return (
     <Card>
@@ -210,10 +284,11 @@ export const PackagesManager = () => {
       <CardContent>
         {isLoading && <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>}
         {error && <p className="text-red-500 text-center p-4">{error.message}</p>}
-        {packages && (
+        {packages && packages.length > 0 && (
             <Table dir="rtl">
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="text-right"></TableHead>
                     <TableHead className="text-right">اسم الباقة</TableHead>
                     <TableHead className="text-right">السعر</TableHead>
                     <TableHead className="text-right">الحالة</TableHead>
@@ -222,7 +297,8 @@ export const PackagesManager = () => {
                 </TableHeader>
                 <TableBody>
                     {packages.map(pkg => (
-                        <TableRow key={pkg.id}>
+                        <TableRow key={pkg.id} className={!pkg.isActive ? 'bg-muted/50' : ''}>
+                            <TableCell>{pkg.isFeatured && <Star className="h-5 w-5 text-yellow-500" />}</TableCell>
                             <TableCell className="font-medium">{pkg.name}</TableCell>
                             <TableCell>{pkg.price} ر.س</TableCell>
                             <TableCell>{pkg.isActive ? 'مفعلة' : 'معطلة'}</TableCell>
@@ -235,14 +311,20 @@ export const PackagesManager = () => {
                 </TableBody>
             </Table>
         )}
+        {packages && packages.length === 0 && (
+          <div className="text-center p-8 text-gray-500 dark:text-gray-400">
+            <p>لم يتم العثور على أي باقات بعد.</p>
+            <p className="mt-2">انقر على زر "إضافة باقة" للبدء بإنشاء أول باقة.</p>
+          </div>
+        )}
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="text-right">{selectedPackage ? 'تعديل باقة' : 'إنشاء باقة جديدة'}</DialogTitle>
             </DialogHeader>
-            <div className="py-4">
-              <PackageForm pkg={selectedPackage} onFinished={() => setIsDialogOpen(false)} />
+            <div className="py-4 max-h-[80vh] overflow-y-auto px-2">
+              <PackageForm pkg={selectedPackage} categories={categories || []} onFinished={() => setIsDialogOpen(false)} />
             </div>
           </DialogContent>
         </Dialog>

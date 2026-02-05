@@ -1,14 +1,15 @@
 import { NavLink } from "react-router-dom";
-import { Home, ShoppingCart, Users, FileText, BarChart, BookOpen, User as UserIcon } from "lucide-react";
+import { Home, ShoppingCart, Users, FileText, BarChart, BookOpen, User as UserIcon, FolderTree } from "lucide-react";
 
 const navItems = [
   { to: "overview", icon: Home, label: "نظرة عامة" },
   { to: "requests", icon: FileText, label: "طلبات التسجيل" },
   { to: "packages", icon: ShoppingCart, label: "الباقات" },
+  { to: "package-categories", icon: FolderTree, label: "فئات الباقات" },
   { to: "teachers", icon: Users, label: "المعلمين" },
   { to: "feedback", icon: BarChart, label: "آراء الطلاب" },
   { to: "site-content", icon: BookOpen, label: "محتوى الموقع" },
-  { to: "profile", icon: UserIcon, label: "الملف الشخصي" }, // Restored profile link
+  { to: "profile", icon: UserIcon, label: "الملف الشخصي" },
 ];
 
 export const AdminSidebar = () => {
