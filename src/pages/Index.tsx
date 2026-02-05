@@ -8,8 +8,10 @@ import {
 } from "@/components/ui/card"
 import { CheckCircle, Clock, Star, Heart, Award, Loader2 } from "lucide-react"
 import { Link } from "react-router-dom"
-import { motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import { ChevronRight, ChevronLeft } from 'lucide-react'; // تأكد من استيراد الأيقونات
 
 const API_BASE_URL = "https://tibyanacademy.runasp.net/api";
 const IMAGE_BASE_URL = "https://tibyanacademy.runasp.net";
@@ -160,19 +162,77 @@ const TeachersSection = () => {
   );
 }
 
+
 const TestimonialsSection = () => {
   const { data: testimonials, isLoading, error } = useQuery<Testimonial[], Error>({
     queryKey: ['activeTestimonials'],
     queryFn: fetchActiveTestimonials,
   });
 
+  const [orderedTestimonials, setOrderedTestimonials] = useState<Testimonial[]>([]);
+  const [itemsPerPage, setItemsPerPage] = useState(3);
+
+  // 1. تحديث القائمة عند وصول البيانات
+  useEffect(() => {
+    if (testimonials) {
+      setOrderedTestimonials(testimonials);
+    }
+  }, [testimonials]);
+
+  // 2. التعامل مع حجم الشاشة
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) setItemsPerPage(3);
+      else if (window.innerWidth >= 768) setItemsPerPage(2);
+      else setItemsPerPage(1);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // دوال التحريك اليدوي
+  // تحريك لليمين (السابق): نأخذ آخر عنصر ونضعه في البداية
+  const handlePrev = () => {
+    setOrderedTestimonials((prev) => {
+      const copy = [...prev];
+      const lastItem = copy.pop();
+      if (lastItem) copy.unshift(lastItem);
+      return copy;
+    });
+  };
+
+  // تحريك لليسار (التالي): نأخذ أول عنصر ونضعه في النهاية
+  const handleNext = () => {
+    setOrderedTestimonials((prev) => {
+      const copy = [...prev];
+      const firstItem = copy.shift();
+      if (firstItem) copy.push(firstItem);
+      return copy;
+    });
+  };
+
+  // 3. التدوير التلقائي
+  useEffect(() => {
+    if (!orderedTestimonials || orderedTestimonials.length <= itemsPerPage) return;
+
+    // ملاحظة: عند الضغط يدوياً، سيتم إعادة تعيين هذا المؤقت تلقائياً
+    // لأن orderedTestimonials ستتغير، مما يعيد تشغيل هذا الـ useEffect
+    const interval = setInterval(() => {
+      handlePrev(); // نستخدم نفس منطق التحريك التلقائي (دخول من اليسار)
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [orderedTestimonials, itemsPerPage]);
+
   return (
     <motion.section
-      className="py-20"
-      variants={sectionVariants} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
-      <div className="container">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold sm:text-4xl">ماذا قال طلابنا عنا؟</h2>
+      className="py-16 overflow-hidden bg-gray-50/50" // خلفية خفيفة جداً لإبراز الكروت البيضاء
+      initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }}>
+      <div className="container relative"> {/* relative مهم لتموضع الأزرار */}
+        
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold sm:text-4xl text-[#0a1f44]">ماذا قال طلابنا عنا؟</h2>
         </div>
 
         {isLoading && (
@@ -187,43 +247,94 @@ const TestimonialsSection = () => {
           </div>
         )}
 
-        {testimonials && testimonials.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {testimonials.slice(0, 3).map(item => (
-              <motion.div variants={itemVariants} key={item.id}>
-                  <Card className="h-full flex flex-col">
-                      <CardContent className="p-6 flex flex-col h-full">
+        {orderedTestimonials && orderedTestimonials.length > 0 && (
+          <div className="relative group"> 
+            
+            {/* === زر التنقل لليمين (السابق) === */}
+            <button 
+              onClick={handlePrev}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-1/2 lg:translate-x-full 
+                         bg-white border border-gray-200 text-gray-700 p-3 rounded-full shadow-lg 
+                         hover:bg-primary hover:text-white transition-all duration-300
+                         hidden md:flex items-center justify-center focus:outline-none"
+              aria-label="Previous"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+
+            {/* === زر التنقل لليسار (التالي) === */}
+            <button 
+              onClick={handleNext}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-1/2 lg:-translate-x-full
+                         bg-white border border-gray-200 text-gray-700 p-3 rounded-full shadow-lg 
+                         hover:bg-primary hover:text-white transition-all duration-300
+                         hidden md:flex items-center justify-center focus:outline-none"
+              aria-label="Next"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            {/* حاوية الكروت */}
+            <div className="flex justify-center gap-6 py-4 px-2" dir="ltr">
+               <AnimatePresence initial={false} mode="popLayout">
+                  {orderedTestimonials.slice(0, itemsPerPage).map((item) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }} 
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.4 }}
+                      className="flex-shrink-0 w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]"
+                    >
+                      <Card className="h-full flex flex-col text-right hover:shadow-md transition-all duration-300 border border-gray-100 bg-white rounded-xl" dir="rtl">
+                        <CardContent className="p-8 flex flex-col h-full justify-between">
+                          <div className="flex mb-4 justify-end">
+                            {[...Array(5)].map((_, i) => (
+                               <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400 ml-1" />
+                            ))}
+                          </div>
+
                           {item.imageUrl && (
-                            <div className="mb-4 rounded-lg overflow-hidden border">
-                              <img 
-                                src={getFullImageUrl(item.imageUrl)} 
-                                alt={`شهادة من ${item.studentName}`} 
-                                className="w-full h-auto object-contain" 
-                                onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
-                              />
+                            <div className="mb-4 rounded-full overflow-hidden border border-gray-100 mx-auto w-16 h-16 shadow-sm">
+                               <img 
+                                 src={item.imageUrl} 
+                                 alt={item.studentName} 
+                                 className="w-full h-full object-cover" 
+                                 onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                               />
                             </div>
                           )}
-                          <div className="flex mb-4">
-                              {[...Array(5)].map((_, i) => (<Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />))}
-                          </div>
-                          <p className="text-muted-foreground mb-4 flex-grow">"{item.testimonialText}"</p>
-                          <div className="mt-auto pt-4 border-t">
-                             <div className="font-semibold text-center">
+
+                          <p className="text-gray-600 mb-6 flex-grow text-right text-sm leading-7 font-medium">
+                            "{item.testimonialText}"
+                          </p>
+
+                          <div className="mt-auto pt-4 border-t border-gray-50 text-right">
+                             <div className="font-bold text-gray-900 text-sm">
                                 {item.studentName}
-                                {item.country && <span> من {item.country}</span>}
                              </div>
+                             {item.country && <span className="text-xs text-gray-400 mt-1 block">{item.country}</span>}
                           </div>
-                      </CardContent>
-                  </Card>
-              </motion.div>
-            ))}
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+               </AnimatePresence>
+            </div>
+
+            {/* أزرار للموبايل تظهر في الأسفل فقط للشاشات الصغيرة */}
+            <div className="flex justify-center gap-4 mt-6 md:hidden">
+                <button onClick={handlePrev} className="p-2 rounded-full bg-white border shadow-sm active:scale-95 transition-transform"><ChevronRight /></button>
+                <button onClick={handleNext} className="p-2 rounded-full bg-white border shadow-sm active:scale-95 transition-transform"><ChevronLeft /></button>
+            </div>
+
           </div>
         )}
       </div>
     </motion.section>
   );
 }
-
 const PricingSection = () => {
   const { data: packages, isLoading, error } = useQuery<Package[], Error>({
     queryKey: ['activePackages'],
